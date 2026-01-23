@@ -4,7 +4,9 @@ import { signIn, signOut } from "@/auth"
 import { AuthError } from "next-auth"
 import { prisma } from "@/lib/db/client"
 import { hashPassword, validatePasswordStrength } from "@/lib/auth/password"
+import { sendVerificationEmail } from "@/lib/email/client"
 import { redirect } from "next/navigation"
+import { randomUUID } from "crypto"
 
 export async function loginAction(formData: FormData) {
   try {
@@ -42,7 +44,7 @@ export async function signupAction(formData: FormData) {
 
   // Create user (emailVerified will be null until verified)
   const passwordHash = await hashPassword(password)
-  await prisma.user.create({
+  const user = await prisma.user.create({
     data: {
       email,
       name,
@@ -50,6 +52,21 @@ export async function signupAction(formData: FormData) {
       emailVerified: null, // Will be set in email verification flow
     },
   })
+
+  // Generate verification token (24-hour expiry per healthcare standard)
+  const token = randomUUID()
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours from now
+
+  await prisma.emailVerificationToken.create({
+    data: {
+      userId: user.id,
+      token,
+      expiresAt,
+    },
+  })
+
+  // Send verification email
+  await sendVerificationEmail(email, token)
 
   return { success: true, message: "Account created. Check your email to verify." }
 }
