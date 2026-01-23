@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 ## Current Position
 
 Phase: 1 of 5 (Foundation & Authentication)
-Plan: 2 of 8 in current phase
+Plan: 3 of 8 in current phase
 Status: In progress
-Last activity: 2026-01-23 — Completed 01-01-PLAN.md
+Last activity: 2026-01-23 — Completed 01-03-PLAN.md
 
-Progress: [██░░░░░░░░] ~25%
+Progress: [███░░░░░░░] ~38%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
-- Average duration: 13 minutes
-- Total execution time: 0.42 hours
+- Total plans completed: 3
+- Average duration: 11 minutes
+- Total execution time: 0.53 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01 | 2 | 25m | 13m |
+| 01 | 3 | 32m | 11m |
 
 **Recent Trend:**
-- Last 5 plans: 01-02 (15m), 01-01 (10m)
-- Trend: Efficient execution
+- Last 5 plans: 01-03 (7m), 01-02 (15m), 01-01 (10m)
+- Trend: Excellent velocity, increasingly efficient execution
 
 *Updated after each plan completion*
 
@@ -65,11 +65,22 @@ Recent decisions affecting current work:
 | rls-defense-in-depth | Multi-tenant isolation for healthcare | PostgreSQL RLS with FORCE ROW LEVEL SECURITY | 2026-01-23 |
 | append-only-audit-logs | Healthcare compliance requirements | Block UPDATE/DELETE on audit_logs via RLS | 2026-01-23 |
 
+**New decisions from 01-03:**
+
+| ID | Context | Decision | Date |
+|----|---------|----------|------|
+| auth-js-v5 | Modern authentication for App Router | Use Auth.js v5 (next-auth@beta) with Credentials provider | 2026-01-23 |
+| jwt-sessions | Session strategy for stateless auth | JWT sessions with 24-hour expiry in httpOnly cookies | 2026-01-23 |
+| bcryptjs-hashing | Password security standard | bcryptjs with 10 salt rounds for password hashing | 2026-01-23 |
+| healthcare-password-req | HIPAA compliance requirements | 12+ char passwords with uppercase, lowercase, number, special char | 2026-01-23 |
+| server-actions-auth | Next.js 14 auth pattern | Server actions for signup, login, logout mutations | 2026-01-23 |
+
 ### Pending Todos
 
 - Implement Prisma Client Extension to set `app.current_tenant_id` per request
 - Create seed script for initial test organization and user
 - Set up database migrations in CI/CD pipeline
+- Implement email verification flow (users cannot login until emailVerified is set)
 
 ### Blockers/Concerns
 
@@ -78,9 +89,9 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-23
-Stopped at: Completed 01-01-PLAN.md
+Stopped at: Completed 01-03-PLAN.md
 Resume file: None
-Next step: Continue with next plan in Phase 1
+Next step: Continue with 01-04 (Email Verification) in Phase 1
 
 ---
 *State initialized: 2026-01-21*
