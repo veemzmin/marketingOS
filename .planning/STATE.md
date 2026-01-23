@@ -3,11 +3,11 @@
 ## Current Position
 
 Phase: 01 of [total] (Foundation and Authentication)
-Plan: 01-06 completed
+Plan: 01-05 completed
 Status: In progress
-Last activity: 2026-01-23 - Completed 01-06-PLAN.md (Multi-Tenant Middleware & RLS Context)
+Last activity: 2026-01-23 - Completed 01-05-PLAN.md (TOTP 2FA Implementation)
 
-Progress: ██████░░░░░░░░░░░░░░ 30% (6 plans complete)
+Progress: █████░░░░░░░░░░░░░░░ 25% (5 plans complete)
 
 ## Accumulated Decisions
 
@@ -17,6 +17,10 @@ Progress: ██████░░░░░░░░░░░░░░ 30% (6 pl
 | 01-04 | 24-hour token expiry for email verification | Healthcare compliance standard |
 | 01-04 | Auto-delete verification tokens after use | Prevents token reuse, maintains clean DB |
 | 01-04 | 3-second auto-redirect after verification | User feedback + automatic flow advancement |
+| 01-05 | Use speakeasy for TOTP with 2-window tolerance | Healthcare-grade RFC 6238 compliance with ±60s clock skew |
+| 01-05 | 10-minute temporary TotpSetup records | Security best practice - don't persist unverified secrets |
+| 01-05 | 2FA bypass token pattern for session creation | Maintains NextAuth flow while inserting 2FA verification step |
+| 01-05 | Verify credentials first, then redirect to 2FA | Clean separation - no session until both factors verified |
 | 01-06 | Dual tenancy strategy (subdomain + path-based) | Flexibility for deployment scenarios |
 | 01-06 | UserOrganization membership verification in middleware | Defense-in-depth security |
 | 01-06 | Header injection pattern (x-tenant-id) | Clean separation between middleware and routes |
@@ -24,7 +28,13 @@ Progress: ██████░░░░░░░░░░░░░░ 30% (6 pl
 
 ## Critical Issues & Blockers
 
-None currently.
+**01-05 Concerns:**
+- Recovery mechanism needed - Users who lose authenticator app are locked out
+  - Recommendation: Add backup codes in future plan
+  - Alternative: Add 2FA reset via email verification
+- No 2FA disable flow - Once enabled, users cannot disable 2FA via UI
+  - Current workaround: Admin can update database
+  - Recommendation: Add "Disable 2FA" button (requires password confirmation)
 
 ## Tech Stack Status
 
@@ -39,6 +49,7 @@ None currently.
 - bcryptjs (password hashing)
 - Auth.js credentials provider
 - Email verification (resend)
+- TOTP 2FA (speakeasy, qrcode)
 
 ### Email
 - Resend (production email sending)
@@ -46,6 +57,6 @@ None currently.
 
 ## Session Continuity
 
-Last session: 2026-01-23T09:47:16-05:00
-Stopped at: Completed 01-06-PLAN.md
+Last session: 2026-01-23T09:49:39Z
+Stopped at: Completed 01-05-PLAN.md (TOTP 2FA Implementation)
 Resume file: None
