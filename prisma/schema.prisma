@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -11,4 +8,133 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+// ============================================================================
+// MULTI-TENANT MODELS
+// ============================================================================
+
+/// Organization - Top-level tenant entity
+/// Each organization represents an isolated customer/company
+model Organization {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  userOrganizations UserOrganization[]
+  auditLogs         AuditLog[]
+
+  @@map("organizations")
+}
+
+/// User - Authentication and identity
+/// Users can belong to multiple organizations with different roles
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  passwordHash  String
+  totpEnabled   Boolean   @default(false)
+  totpSecret    String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relationships
+  userOrganizations       UserOrganization[]
+  emailVerificationTokens EmailVerificationToken[]
+  totpSetups              TotpSetup[]
+  auditLogs               AuditLog[]
+
+  @@map("users")
+}
+
+/// UserOrganization - Join table with role assignment
+/// Implements many-to-many relationship between users and organizations
+model UserOrganization {
+  id             String   @id @default(cuid())
+  userId         String
+  organizationId String
+  role           Role     @default(VIEWER)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relationships
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@index([organizationId])
+  @@index([userId])
+  @@map("user_organizations")
+}
+
+/// Role - User permission levels within an organization
+enum Role {
+  ADMIN // Full access to organization settings and content
+  REVIEWER // Can review and approve content
+  CREATOR // Can create and submit content for review
+  VIEWER // Read-only access to content
+}
+
+/// EmailVerificationToken - Time-limited tokens for email verification
+/// Used during user registration and email change flows
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("email_verification_tokens")
+}
+
+/// TotpSetup - Temporary storage for TOTP setup process
+/// Stores unconfirmed TOTP secrets during 2FA enrollment
+model TotpSetup {
+  id        String   @id @default(cuid())
+  userId    String
+  secret    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("totp_setups")
+}
+
+/// AuditLog - Immutable audit trail for compliance
+/// Tracks all actions within organizations for regulatory compliance
+/// Protected by append-only RLS policy (no UPDATE/DELETE)
+model AuditLog {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String?
+  action         String // e.g., "create", "update", "delete", "approve", "reject"
+  resource       String // e.g., "campaign", "content", "user", "organization"
+  resourceId     String? // ID of the affected resource
+  changes        Json? // Before/after diff for updates
+  metadata       Json? // Additional context (IP, user agent, etc.)
+  createdAt      DateTime @default(now())
+
+  // Relationships
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([userId])
+  @@index([resource, resourceId])
+  @@index([createdAt])
+  @@map("audit_logs")
 }
