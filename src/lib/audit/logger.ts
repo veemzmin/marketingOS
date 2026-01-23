@@ -1,164 +1,82 @@
-/**
- * Manual Audit Logging Helpers
- *
- * Provides utilities for logging specific audit events that aren't captured
- * by automatic Prisma middleware (e.g., authentication events, permission changes).
- *
- * All functions use basePrisma to prevent recursion through the audit middleware.
- */
-
-import { basePrisma } from "@/lib/db/client"
-import { Prisma } from "../../../generated/prisma/client"
+import { prisma } from "@/lib/db/client"
+import { headers } from "next/headers"
 
 /**
- * Generic audit event logger
+ * Log a role change to the audit trail
  *
- * @param organizationId - Organization context
- * @param userId - User who performed the action (null for system actions)
- * @param action - Action performed (e.g., "login", "logout", "approve", "reject")
- * @param resource - Resource type (e.g., "auth", "user", "campaign")
- * @param resourceId - ID of affected resource (optional)
- * @param changes - Changes made (optional)
- * @param metadata - Additional context (optional)
- */
-export async function logAuditEvent(params: {
-  organizationId: string
-  userId: string | null
-  action: string
-  resource: string
-  resourceId?: string | null
-  changes?: Prisma.JsonValue
-  metadata?: Prisma.JsonValue
-}) {
-  try {
-    await basePrisma.auditLog.create({
-      data: {
-        organizationId: params.organizationId,
-        userId: params.userId,
-        action: params.action,
-        resource: params.resource,
-        resourceId: params.resourceId || null,
-        changes: params.changes || null,
-        metadata: {
-          ...(typeof params.metadata === "object" && params.metadata !== null ? params.metadata : {}),
-          timestamp: new Date().toISOString(),
-        },
-      },
-    })
-  } catch (error) {
-    // Non-blocking - log error but don't fail the operation
-    console.error("Audit logging failed:", error)
-  }
-}
-
-/**
- * Log successful login event
+ * Records role changes for compliance and tracking
+ * Automatically captures tenant context and timestamp
  *
- * @param organizationId - Organization context
- * @param userId - User who logged in
+ * @param targetUserId - The user whose role is being changed
+ * @param oldRole - Previous role
+ * @param newRole - New role
+ * @param performedById - User ID of the admin making the change
  * @param metadata - Additional context (IP, user agent, etc.)
  */
-export async function logLogin(params: {
-  organizationId: string
-  userId: string
-  metadata?: {
-    ip?: string
-    userAgent?: string
-    method?: "credentials" | "oauth" | "magic-link"
-    twoFactorUsed?: boolean
-  }
-}) {
-  await logAuditEvent({
-    organizationId: params.organizationId,
-    userId: params.userId,
-    action: "login",
-    resource: "auth",
-    resourceId: params.userId,
-    metadata: params.metadata,
-  })
-}
+export async function logRoleChange(
+  targetUserId: string,
+  oldRole: string,
+  newRole: string,
+  performedById: string,
+  metadata?: Record<string, any>
+): Promise<void> {
+  const headersList = await headers()
+  const tenantId = headersList.get("x-tenant-id")
 
-/**
- * Log logout event
- *
- * @param organizationId - Organization context
- * @param userId - User who logged out
- * @param metadata - Additional context
- */
-export async function logLogout(params: {
-  organizationId: string
-  userId: string
-  metadata?: {
-    ip?: string
-    sessionDuration?: number
+  if (!tenantId) {
+    throw new Error("Cannot log role change without tenant context")
   }
-}) {
-  await logAuditEvent({
-    organizationId: params.organizationId,
-    userId: params.userId,
-    action: "logout",
-    resource: "auth",
-    resourceId: params.userId,
-    metadata: params.metadata,
-  })
-}
 
-/**
- * Log role change event
- *
- * @param organizationId - Organization context
- * @param actorId - User who made the change
- * @param targetUserId - User whose role was changed
- * @param changes - Before/after role values
- * @param metadata - Additional context
- */
-export async function logRoleChange(params: {
-  organizationId: string
-  actorId: string
-  targetUserId: string
-  changes: {
-    from: string
-    to: string
-  }
-  metadata?: {
-    reason?: string
-  }
-}) {
-  await logAuditEvent({
-    organizationId: params.organizationId,
-    userId: params.actorId,
-    action: "role_change",
-    resource: "user_organization",
-    resourceId: params.targetUserId,
-    changes: {
-      role: params.changes,
-    },
-    metadata: {
-      ...params.metadata,
-      targetUserId: params.targetUserId,
+  await prisma.auditLog.create({
+    data: {
+      organizationId: tenantId,
+      userId: performedById,
+      action: "update_role",
+      resource: "user",
+      resourceId: targetUserId,
+      changes: {
+        field: "role",
+        from: oldRole,
+        to: newRole,
+      },
+      metadata: metadata || {},
     },
   })
 }
 
 /**
- * Log failed login attempt
+ * Log a user invitation to the audit trail
  *
- * @param email - Email used for login attempt
- * @param metadata - Additional context (IP, user agent, reason)
+ * @param invitedEmail - Email of the invited user
+ * @param assignedRole - Role assigned in the invitation
+ * @param performedById - User ID of the admin sending invite
+ * @param metadata - Additional context
  */
-export async function logFailedLogin(params: {
-  email: string
-  metadata?: {
-    ip?: string
-    userAgent?: string
-    reason?: "invalid_credentials" | "account_locked" | "email_not_verified" | "2fa_failed"
+export async function logUserInvitation(
+  invitedEmail: string,
+  assignedRole: string,
+  performedById: string,
+  metadata?: Record<string, any>
+): Promise<void> {
+  const headersList = await headers()
+  const tenantId = headersList.get("x-tenant-id")
+
+  if (!tenantId) {
+    throw new Error("Cannot log invitation without tenant context")
   }
-}) {
-  // For failed logins, we don't have organization context yet
-  // These can be logged at system level or queued for later association
-  console.warn("Failed login attempt:", {
-    email: params.email,
-    ...params.metadata,
-    timestamp: new Date().toISOString(),
+
+  await prisma.auditLog.create({
+    data: {
+      organizationId: tenantId,
+      userId: performedById,
+      action: "invite_user",
+      resource: "user",
+      resourceId: null,
+      changes: {
+        email: invitedEmail,
+        role: assignedRole,
+      },
+      metadata: metadata || {},
+    },
   })
 }
