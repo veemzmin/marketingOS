@@ -12,25 +12,32 @@ const basePrisma =
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = basePrisma
 
+// Export basePrisma for use in audit logging (prevents recursion)
+export { basePrisma }
+
 /**
- * Extended Prisma Client with Row-Level Security (RLS) context
+ * Extended Prisma Client with Row-Level Security (RLS) context and Audit Logging
  *
- * Automatically sets PostgreSQL session variable 'app.current_tenant_id'
- * before each database operation, enabling RLS policies to filter data
- * by the current tenant.
+ * Features:
+ * 1. RLS Context: Automatically sets PostgreSQL session variable 'app.current_tenant_id'
+ *    before each database operation, enabling RLS policies to filter data by tenant.
+ *
+ * 2. Audit Logging: Automatically logs all create/update/delete operations to AuditLog table
+ *    for HIPAA compliance. Captures user context from request headers.
  *
  * Usage:
  * - In API routes: const data = await prisma.organization.findMany()
  * - In server components: const data = await prisma.organization.findMany()
  *
- * The middleware injects x-tenant-id header which this extension reads.
+ * The middleware injects x-tenant-id and x-user-id headers which this extension reads.
  */
 export const prisma = basePrisma.$extends({
   query: {
     async $allOperations({ operation, model, args, query }) {
-      // Extract tenant ID from request headers (injected by middleware)
+      // Extract context from request headers (injected by middleware)
       const headersList = await headers()
       const tenantId = headersList.get("x-tenant-id")
+      const userId = headersList.get("x-user-id")
 
       // If tenant ID present, set PostgreSQL session variable for RLS
       if (tenantId) {
@@ -43,7 +50,63 @@ export const prisma = basePrisma.$extends({
       }
 
       // Execute the actual query with RLS context active
-      return query(args)
+      const result = await query(args)
+
+      // Audit logging for mutations (create, update, delete)
+      // Skip if:
+      // - Model is AuditLog itself (prevent recursion)
+      // - Operation is not a mutation (read operations don't need audit)
+      // - No tenant context (can't log without organization)
+      const isMutation = ["create", "update", "delete", "createMany", "updateMany", "deleteMany"].includes(operation)
+      const shouldAudit = model !== "AuditLog" && isMutation && tenantId
+
+      if (shouldAudit) {
+        try {
+          // Determine resource ID from operation
+          let resourceId: string | null = null
+          if (operation === "create" && result && typeof result === "object" && "id" in result) {
+            resourceId = result.id as string
+          } else if (operation === "update" || operation === "delete") {
+            resourceId = args.where?.id as string | undefined || null
+          }
+
+          // Map operation to action
+          const action = operation.replace("Many", "") // "createMany" -> "create"
+
+          // Capture changes for update operations
+          let changes = null
+          if (operation === "update" || operation === "updateMany") {
+            changes = {
+              data: args.data,
+            }
+          } else if (operation === "create") {
+            changes = {
+              data: args.data || args,
+            }
+          }
+
+          // Log audit event using basePrisma (prevents recursion)
+          await basePrisma.auditLog.create({
+            data: {
+              organizationId: tenantId,
+              userId: userId || null,
+              action,
+              resource: model || "unknown",
+              resourceId,
+              changes,
+              metadata: {
+                operation,
+                timestamp: new Date().toISOString(),
+              },
+            },
+          })
+        } catch (error) {
+          // Non-blocking error handling - log error but don't fail the operation
+          console.error("Audit logging failed:", error)
+        }
+      }
+
+      return result
     },
   },
 })
