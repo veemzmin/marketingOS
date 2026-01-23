@@ -74,3 +74,69 @@ export async function signupAction(formData: FormData) {
 export async function logoutAction() {
   await signOut({ redirect: true, redirectTo: "/" })
 }
+
+export async function verifyEmailAction(token: string) {
+  // Find the verification token
+  const verificationToken = await prisma.emailVerificationToken.findUnique({
+    where: { token },
+    include: { user: true },
+  })
+
+  if (!verificationToken) {
+    return { error: "Invalid verification token" }
+  }
+
+  // Check if token has expired
+  if (verificationToken.expiresAt < new Date()) {
+    return { error: "Verification token has expired. Please request a new one." }
+  }
+
+  // Mark user as verified
+  await prisma.user.update({
+    where: { id: verificationToken.userId },
+    data: { emailVerified: new Date() },
+  })
+
+  // Delete the used token
+  await prisma.emailVerificationToken.delete({
+    where: { id: verificationToken.id },
+  })
+
+  return { success: true, email: verificationToken.user.email }
+}
+
+export async function resendVerificationAction(email: string) {
+  // Find user
+  const user = await prisma.user.findUnique({ where: { email } })
+
+  if (!user) {
+    return { error: "User not found" }
+  }
+
+  // Check if already verified
+  if (user.emailVerified) {
+    return { error: "Email already verified" }
+  }
+
+  // Delete any existing tokens for this user
+  await prisma.emailVerificationToken.deleteMany({
+    where: { userId: user.id },
+  })
+
+  // Generate new token
+  const token = randomUUID()
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours from now
+
+  await prisma.emailVerificationToken.create({
+    data: {
+      userId: user.id,
+      token,
+      expiresAt,
+    },
+  })
+
+  // Send verification email
+  await sendVerificationEmail(email, token)
+
+  return { success: true, message: "Verification email sent. Check your inbox." }
+}

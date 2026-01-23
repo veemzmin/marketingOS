@@ -3,6 +3,7 @@
 import { loginAction } from "@/app/actions/auth"
 import { useFormState } from "react-dom"
 import { useFormStatus } from "react-dom"
+import { useSearchParams } from "next/navigation"
 
 function SubmitButton() {
   const { pending } = useFormStatus()
@@ -20,6 +21,8 @@ function SubmitButton() {
 
 export default function LoginPage() {
   const [state, formAction] = useFormState(loginAction, undefined)
+  const searchParams = useSearchParams()
+  const verified = searchParams.get("verified") === "true"
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
@@ -32,6 +35,12 @@ export default function LoginPage() {
         </div>
 
         <form action={formAction} className="space-y-6">
+          {verified && (
+            <div className="rounded-md bg-green-50 p-4 text-sm text-green-800">
+              Email verified successfully! You can now sign in.
+            </div>
+          )}
+
           {state?.error && (
             <div className="rounded-md bg-red-50 p-4 text-sm text-red-800">
               {state.error}
