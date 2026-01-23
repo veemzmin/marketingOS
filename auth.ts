@@ -15,6 +15,29 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null
         }
 
+        const password = credentials.password as string
+
+        // Check if this is a 2FA bypass (after successful TOTP verification)
+        if (password.startsWith("2fa-bypass-")) {
+          const userId = password.replace("2fa-bypass-", "")
+
+          // Find user by ID and verify 2FA is enabled
+          const user = await prisma.user.findUnique({
+            where: { id: userId },
+          })
+
+          if (!user || !user.totpEnabled) {
+            return null
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+          }
+        }
+
+        // Normal authentication flow
         // Find user by email
         const user = await prisma.user.findUnique({
           where: { email: credentials.email as string },
@@ -24,14 +47,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null
         }
 
-        // Check if email is verified (will implement in next plan)
+        // Check if email is verified
         if (!user.emailVerified) {
           throw new Error("Email not verified")
         }
 
         // Verify password
         const isValid = await comparePassword(
-          credentials.password as string,
+          password,
           user.passwordHash
         )
 
