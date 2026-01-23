@@ -38,9 +38,8 @@ export const prisma = basePrisma.$extends({
         // Using false = session-scoped (persists until connection released to pool)
         // This ensures RLS policies using current_setting('app.current_tenant_id')
         // will filter data to only the current tenant
-        await basePrisma.$executeRawUnsafe(
-          `SELECT set_config('app.current_tenant_id', '${tenantId}', false)`
-        )
+        // Using parameterized query to prevent SQL injection
+        await basePrisma.$executeRaw`SELECT set_config('app.current_tenant_id', ${tenantId}, false)`
       }
 
       // Execute the actual query with RLS context active
