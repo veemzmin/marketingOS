@@ -1,9 +1,7 @@
 import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
-import { PrismaClient } from "@prisma/client"
+import { prisma } from "@/lib/db/client"
 import { comparePassword } from "@/lib/auth/password"
-
-const prisma = new PrismaClient()
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
