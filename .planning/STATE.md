@@ -3,11 +3,11 @@
 ## Current Position
 
 Phase: 01 of [total] (Foundation and Authentication)
-Plan: 01-07 completed
+Plan: 01-08 completed
 Status: In progress
-Last activity: 2026-01-23 - Completed 01-07-PLAN.md (Audit Logging Middleware)
+Last activity: 2026-01-23 - Completed 01-08-PLAN.md (User Management & Permissions)
 
-Progress: ███████░░░░░░░░░░░░░ 35% (7 plans complete)
+Progress: ████████░░░░░░░░░░░░ 40% (8 plans complete)
 
 ## Accumulated Decisions
 
@@ -29,6 +29,10 @@ Progress: ███████░░░░░░░░░░░░░ 35% (7 pl
 | 01-07 | Non-blocking error handling for audit failures | Audit logging should not cause operational failures |
 | 01-07 | Admin-only access to audit logs and exports | Audit logs contain sensitive operational data for compliance reviews |
 | 01-07 | CSV field escaping per RFC 4180 | Compliance tools expect properly escaped CSV |
+| 01-08 | 7-day invitation token expiry (vs 24-hour for email verification) | Admin invitations are less time-sensitive, longer window reduces support burden |
+| 01-08 | Prevent self-role-change | Admins changing their own role could lead to lockout |
+| 01-08 | Reuse EmailVerificationToken model for invitation tokens | Identical token requirements, avoids schema duplication |
+| 01-08 | Create placeholder users for invited non-existing users | Enables immediate org membership while deferring full registration |
 
 ## Critical Issues & Blockers
 
@@ -46,6 +50,12 @@ Progress: ███████░░░░░░░░░░░░░ 35% (7 pl
 - Audit log retention policy (RLS prevents deletion, but may need archival)
 - Pagination for large audit histories
 
+**01-08 Future Enhancements:**
+- Invitation acceptance flow (/auth/accept-invite page)
+- Bulk user import
+- Role change notifications via email
+- User removal action in UI (removeUserFromOrganizationAction exists but not wired to UI)
+
 ## Tech Stack Status
 
 ### Core Stack
@@ -61,17 +71,24 @@ Progress: ███████░░░░░░░░░░░░░ 35% (7 pl
 - Email verification (resend)
 - TOTP 2FA (speakeasy, qrcode)
 
+### Permissions & RBAC
+- Role hierarchy: ADMIN > REVIEWER > CREATOR > VIEWER
+- Permission utilities (requireAdmin, requireRole, hasPermission)
+- User invitation system with role assignment
+
 ### Audit & Compliance
 - Prisma middleware for automatic audit logging
 - CSV export for compliance reporting
 - Admin-only audit viewer UI
+- Role change and invitation audit trail
 
 ### Email
 - Resend (production email sending)
 - Console mode for development
+- Invitation emails with 7-day expiry
 
 ## Session Continuity
 
-Last session: 2026-01-23T14:57:50Z
-Stopped at: Completed 01-07-PLAN.md (Audit Logging Middleware)
+Last session: 2026-01-23T14:59:06Z
+Stopped at: Completed 01-08-PLAN.md (User Management & Permissions)
 Resume file: None
