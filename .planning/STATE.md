@@ -2,12 +2,12 @@
 
 ## Current Position
 
-Phase: 1 of 5 (Foundation & Authentication) - ✓ COMPLETE
-Plan: 8/8 plans complete
-Status: Phase verified and ready for Phase 2
-Last activity: 2026-01-23 - Phase 1 verification passed (8/8 success criteria)
+Phase: 3 of 5 (Content Creation)
+Plan: 1 of 4 complete
+Status: In progress - schema and dependencies established
+Last activity: 2026-01-25 - Completed 03-01-PLAN.md (Content schema with versioning)
 
-Progress: ████████████████████ 20% (1 of 5 phases complete)
+Progress: ████████████████████░░░░ 21% (1.2 of 5 phases complete)
 
 ## Accumulated Decisions
 
@@ -33,6 +33,10 @@ Progress: ████████████████████ 20% (1 of
 | 01-08 | Prevent self-role-change | Admins changing their own role could lead to lockout |
 | 01-08 | Reuse EmailVerificationToken model for invitation tokens | Identical token requirements, avoids schema duplication |
 | 01-08 | Create placeholder users for invited non-existing users | Enables immediate org membership while deferring full registration |
+| 03-01 | Use ContentVersion with unique [contentId, versionNumber] for immutable audit trail | Prevents version tampering, supports compliance requirements |
+| 03-01 | Dual complianceScore storage (Content + ContentVersion) | Content.complianceScore stores latest, ContentVersion stores at-time for historical tracking |
+| 03-01 | Topic/audience/tone metadata on ContentVersion | Provides governance context for scoring (mental-health vs crisis content has different rules) |
+| 03-01 | React Hook Form + Zod validation stack | Industry standard for Next.js, type-safe schema validation |
 
 ## Critical Issues & Blockers
 
@@ -87,9 +91,16 @@ Progress: ████████████████████ 20% (1 of
 - Console mode for development
 - Invitation emails with 7-day expiry
 
+### Content Creation
+- Content/ContentVersion/ReviewDecision models
+- Immutable versioning with audit trail
+- Status workflow (DRAFT → SUBMITTED → IN_REVIEW → APPROVED/REJECTED)
+- Form validation (react-hook-form@7.71.1, zod@4.3.6)
+- User notifications (react-hot-toast@2.6.0)
+
 ## Session Continuity
 
-Last session: 2026-01-23
-Stopped at: Phase 1 complete and verified
+Last session: 2026-01-25
+Stopped at: Completed 03-01-PLAN.md (Content schema and dependencies)
 Resume file: None
-Next step: Run `/gsd:plan-phase 2` to create execution plans for Phase 2 (Governance Engine)
+Next step: Execute 03-02-PLAN.md (Governance integration) or 03-03-PLAN.md (Content editor UI)
