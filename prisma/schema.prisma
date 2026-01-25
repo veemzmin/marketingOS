@@ -26,6 +26,7 @@ model Organization {
   // Relationships
   userOrganizations UserOrganization[]
   auditLogs         AuditLog[]
+  content           Content[]
 
   @@map("organizations")
 }
@@ -48,6 +49,9 @@ model User {
   emailVerificationTokens EmailVerificationToken[]
   totpSetups              TotpSetup[]
   auditLogs               AuditLog[]
+  contentCreated          Content[]        @relation("ContentCreator")
+  contentVersions         ContentVersion[] @relation("VersionCreator")
+  reviewDecisions         ReviewDecision[] @relation("Reviewer")
 
   @@map("users")
 }
@@ -78,6 +82,15 @@ enum Role {
   REVIEWER // Can review and approve content
   CREATOR // Can create and submit content for review
   VIEWER // Read-only access to content
+}
+
+/// ContentStatus - Content workflow states
+enum ContentStatus {
+  DRAFT // Initial state, content being created
+  SUBMITTED // Submitted for review
+  IN_REVIEW // Under review by reviewer
+  APPROVED // Approved by reviewer
+  REJECTED // Rejected by reviewer
 }
 
 /// EmailVerificationToken - Time-limited tokens for email verification
@@ -138,4 +151,76 @@ model AuditLog {
   @@index([resource, resourceId])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+// ============================================================================
+// CONTENT CREATION MODELS
+// ============================================================================
+
+/// Content - Main content entity with status workflow
+/// Each content item represents a piece of marketing content in the system
+model Content {
+  id               String        @id @default(cuid())
+  organizationId   String
+  title            String
+  status           ContentStatus @default(DRAFT)
+  complianceScore  Int? // Latest compliance score from governance engine
+  createdByUserId  String
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  // Relationships
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy      User            @relation("ContentCreator", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  versions       ContentVersion[]
+  reviewDecision ReviewDecision?
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([createdByUserId])
+  @@map("content")
+}
+
+/// ContentVersion - Immutable version history for audit trail
+/// Every content change creates a new version record
+model ContentVersion {
+  id              String   @id @default(cuid())
+  contentId       String
+  versionNumber   Int
+  title           String
+  body            String   @db.Text
+  topic           String // mental-health, substance-use, wellness, crisis
+  audience        String // patients, families, professionals, general
+  tone            String // informative, supportive, clinical, motivational
+  complianceScore Int // Score at time of version creation
+  createdByUserId String
+  createdAt       DateTime @default(now())
+
+  // Relationships
+  content   Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  createdBy User    @relation("VersionCreator", fields: [createdByUserId], references: [id], onDelete: Cascade)
+
+  @@unique([contentId, versionNumber])
+  @@index([contentId])
+  @@index([createdByUserId])
+  @@map("content_versions")
+}
+
+/// ReviewDecision - Review outcome for content approval workflow
+/// Stores reviewer decisions with optional rejection reasons
+model ReviewDecision {
+  id               String   @id @default(cuid())
+  contentId        String   @unique
+  decision         String // APPROVED or REJECTED
+  reviewedByUserId String
+  reason           String? // Optional rejection reason
+  createdAt        DateTime @default(now())
+
+  // Relationships
+  content    Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  reviewedBy User    @relation("Reviewer", fields: [reviewedByUserId], references: [id], onDelete: Cascade)
+
+  @@index([contentId])
+  @@index([reviewedByUserId])
+  @@map("review_decisions")
 }
