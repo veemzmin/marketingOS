@@ -59,10 +59,11 @@ Plans:
   7. System requires consent documentation for patient testimonials
   8. System provides 0-100 compliance score with clear reasoning
   9. System provides inline suggestions for fixing policy violations
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- TBD (will be created during phase planning)
+- [ ] 02-01-PLAN.md — Policy definitions and governance type system
+- [ ] 02-02-PLAN.md — Compliance scoring engine with weighted penalties
 
 ### Phase 3: Content Creation
 **Goal**: Content creation interface where creators draft content with immediate governance feedback
@@ -75,7 +76,7 @@ Plans:
   4. Creator can submit content for review when ready
   5. Creator can view all their content with current status (draft, submitted, in review, approved, rejected)
   6. System stores all content versions for audit trail
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
 - TBD (will be created during phase planning)
@@ -93,7 +94,7 @@ Plans:
   6. Reviewer receives email notification when content needs their review
   7. Creator receives notification of review decision with feedback
   8. System prevents content from progressing without all required approvals
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
 - TBD (will be created during phase planning)
@@ -115,7 +116,7 @@ Plans:
   10. Creator can trigger image generation via n8n integration
   11. Creator can trigger video generation via n8n integration
   12. System tracks generation job status and updates content when complete
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
 - TBD (will be created during phase planning)
@@ -128,11 +129,11 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Authentication | 8/8 | ✓ Complete | 2026-01-23 |
-| 2. Governance Engine | 0/TBD | Not started | - |
+| 2. Governance Engine | 0/3 | Not started | - |
 | 3. Content Creation | 0/TBD | Not started | - |
 | 4. Review Workflow | 0/TBD | Not started | - |
 | 5. AI Generation | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-01-21*
-*Last updated: 2026-01-23*
+*Last updated: 2026-01-25*
