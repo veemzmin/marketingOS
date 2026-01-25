@@ -79,7 +79,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- TBD (will be created during phase planning)
+- [ ] 03-01-PLAN.md — Content schema with versioning and form dependencies
+- [ ] 03-02-PLAN.md — Server actions with governance integration
+- [ ] 03-03-PLAN.md — Content editor UI and dashboard
 
 ### Phase 4: Review Workflow
 **Goal**: Automated review routing where content flows through appropriate approvers with notifications
@@ -130,7 +132,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 |-------|----------------|--------|-----------|
 | 1. Foundation & Authentication | 8/8 | ✓ Complete | 2026-01-23 |
 | 2. Governance Engine | 0/3 | Not started | - |
-| 3. Content Creation | 0/TBD | Not started | - |
+| 3. Content Creation | 0/3 | Not started | - |
 | 4. Review Workflow | 0/TBD | Not started | - |
 | 5. AI Generation | 0/TBD | Not started | - |
 
