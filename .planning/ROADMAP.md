@@ -76,12 +76,15 @@ Plans:
   4. Creator can submit content for review when ready
   5. Creator can view all their content with current status (draft, submitted, in review, approved, rejected)
   6. System stores all content versions for audit trail
-**Plans**: 3 plans
+**Plans**: 6 plans
 
 Plans:
 - [x] 03-01-PLAN.md — Content schema with versioning and form dependencies
 - [x] 03-02-PLAN.md — Server actions with governance integration
 - [x] 03-03-PLAN.md — Content editor UI and dashboard
+- [ ] 03-04-PLAN.md — UI feedback fixes (save indicator visibility, success toast)
+- [ ] 03-05-PLAN.md — Governance policy expansion (inflected forms, cure language)
+- [ ] 03-06-PLAN.md — Compliance score display in editor UI
 
 ### Phase 4: Review Workflow
 **Goal**: Automated review routing where content flows through appropriate approvers with notifications
@@ -132,7 +135,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 |-------|----------------|--------|-----------|
 | 1. Foundation & Authentication | 8/8 | ✓ Complete | 2026-01-23 |
 | 2. Governance Engine | 2/2 | ✓ Complete | 2026-01-25 |
-| 3. Content Creation | 3/3 | ✓ Complete | 2026-01-26 |
+| 3. Content Creation | 3/6 | In Progress - UAT gap closure | - |
 | 4. Review Workflow | 0/TBD | Not started | - |
 | 5. AI Generation | 0/TBD | Not started | - |
 
