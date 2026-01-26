@@ -3,11 +3,11 @@
 ## Current Position
 
 Phase: 3 of 5 (Content Creation)
-Plan: 1 of 4 complete
-Status: In progress - schema and dependencies established
-Last activity: 2026-01-25 - Completed 03-01-PLAN.md (Content schema with versioning)
+Plan: 2 of 4 complete
+Status: In progress - server logic and governance integration complete
+Last activity: 2026-01-25 - Completed 03-02-PLAN.md (Content server actions with governance)
 
-Progress: ████████████████████░░░░ 21% (1.2 of 5 phases complete)
+Progress: ████████████████████░░░░ 22% (1.4 of 5 phases complete)
 
 ## Accumulated Decisions
 
@@ -37,6 +37,10 @@ Progress: ████████████████████░░░�
 | 03-01 | Dual complianceScore storage (Content + ContentVersion) | Content.complianceScore stores latest, ContentVersion stores at-time for historical tracking |
 | 03-01 | Topic/audience/tone metadata on ContentVersion | Provides governance context for scoring (mental-health vs crisis content has different rules) |
 | 03-01 | React Hook Form + Zod validation stack | Industry standard for Next.js, type-safe schema validation |
+| 03-02 | Governance validation on every save (not just submit) | Provides real-time compliance feedback during drafting, prevents submission of non-compliant content |
+| 03-02 | Compliance score stored with each version | Creates immutable audit trail of compliance state at version creation time |
+| 03-02 | Version only created if body changed | Prevents noise from auto-save creating duplicate versions with no content changes |
+| 03-02 | validateGovernanceAction wrapper for real-time UI validation | Enables real-time UI feedback without auth requirement (read-only advisory) |
 
 ## Critical Issues & Blockers
 
@@ -97,10 +101,13 @@ Progress: ████████████████████░░░�
 - Status workflow (DRAFT → SUBMITTED → IN_REVIEW → APPROVED/REJECTED)
 - Form validation (react-hook-form@7.71.1, zod@4.3.6)
 - User notifications (react-hot-toast@2.6.0)
+- Server actions with governance integration (saveDraft, submit, list, get)
+- Intelligent versioning (only creates version if content changed)
+- Status state machine with transition validation
 
 ## Session Continuity
 
 Last session: 2026-01-25
-Stopped at: Completed 03-01-PLAN.md (Content schema and dependencies)
+Stopped at: Completed 03-02-PLAN.md (Content server actions with governance)
 Resume file: None
-Next step: Execute 03-02-PLAN.md (Governance integration) or 03-03-PLAN.md (Content editor UI)
+Next step: Execute 03-03-PLAN.md (Content editor UI) or 03-04-PLAN.md (Review workflow)
