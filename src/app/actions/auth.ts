@@ -9,7 +9,7 @@ import { redirect } from "next/navigation"
 import { randomUUID } from "crypto"
 import speakeasy from "speakeasy"
 
-export async function loginAction(formData: FormData) {
+export async function loginAction(prevState: any, formData: FormData) {
   const email = formData.get("email") as string
   const password = formData.get("password") as string
 

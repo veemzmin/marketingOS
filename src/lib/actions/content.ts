@@ -18,10 +18,22 @@ export async function saveDraftAction({
 }) {
   const session = await auth()
   const headersList = await headers()
-  const organizationId = headersList.get('x-tenant-id')
+  let organizationId = headersList.get('x-tenant-id')
 
-  if (!session?.user?.id || !organizationId) {
+  if (!session?.user?.id) {
     return { success: false, error: 'Unauthorized' }
+  }
+
+  // If no tenant ID in header, get user's first organization
+  if (!organizationId) {
+    const userOrg = await prisma.userOrganization.findFirst({
+      where: { userId: session.user.id },
+      select: { organizationId: true },
+    })
+    if (!userOrg) {
+      return { success: false, error: 'No organization found' }
+    }
+    organizationId = userOrg.organizationId
   }
 
   // Validate form data
@@ -128,10 +140,22 @@ export async function validateGovernanceAction(content: string) {
 export async function submitContentAction({ contentId }: { contentId: string }) {
   const session = await auth()
   const headersList = await headers()
-  const organizationId = headersList.get('x-tenant-id')
+  let organizationId = headersList.get('x-tenant-id')
 
-  if (!session?.user?.id || !organizationId) {
+  if (!session?.user?.id) {
     return { success: false, error: 'Unauthorized' }
+  }
+
+  // If no tenant ID in header, get user's first organization
+  if (!organizationId) {
+    const userOrg = await prisma.userOrganization.findFirst({
+      where: { userId: session.user.id },
+      select: { organizationId: true },
+    })
+    if (!userOrg) {
+      return { success: false, error: 'No organization found' }
+    }
+    organizationId = userOrg.organizationId
   }
 
   const content = await prisma.content.findUnique({
@@ -159,10 +183,22 @@ export async function submitContentAction({ contentId }: { contentId: string }) 
 export async function listContentAction({ status }: { status?: string } = {}) {
   const session = await auth()
   const headersList = await headers()
-  const organizationId = headersList.get('x-tenant-id')
+  let organizationId = headersList.get('x-tenant-id')
 
-  if (!session?.user?.id || !organizationId) {
+  if (!session?.user?.id) {
     return { success: false, error: 'Unauthorized', contents: [] }
+  }
+
+  // If no tenant ID in header, get user's first organization
+  if (!organizationId) {
+    const userOrg = await prisma.userOrganization.findFirst({
+      where: { userId: session.user.id },
+      select: { organizationId: true },
+    })
+    if (!userOrg) {
+      return { success: false, error: 'No organization found', contents: [] }
+    }
+    organizationId = userOrg.organizationId
   }
 
   const contents = await prisma.content.findMany({
@@ -183,10 +219,22 @@ export async function listContentAction({ status }: { status?: string } = {}) {
 export async function getContentAction({ contentId }: { contentId: string }) {
   const session = await auth()
   const headersList = await headers()
-  const organizationId = headersList.get('x-tenant-id')
+  let organizationId = headersList.get('x-tenant-id')
 
-  if (!session?.user?.id || !organizationId) {
+  if (!session?.user?.id) {
     return { success: false, error: 'Unauthorized', content: null }
+  }
+
+  // If no tenant ID in header, get user's first organization
+  if (!organizationId) {
+    const userOrg = await prisma.userOrganization.findFirst({
+      where: { userId: session.user.id },
+      select: { organizationId: true },
+    })
+    if (!userOrg) {
+      return { success: false, error: 'No organization found', content: null }
+    }
+    organizationId = userOrg.organizationId
   }
 
   const content = await prisma.content.findUnique({
