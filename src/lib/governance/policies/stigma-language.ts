@@ -18,6 +18,7 @@ export const STIGMA_TERMS = [
   // Substance use stigma
   // Alternative: "person with substance use disorder"
   'addict',
+  'addicts', // plural form
   'junkie',
   'dopehead',
   'doper',
@@ -38,6 +39,8 @@ export const STIGMA_TERMS = [
   'schizo',
   'schizophrenic', // as noun
   'crazy',
+  'crazier', // comparative form
+  'craziest', // superlative form
   'insane',
   'nuts',
   'mental',
@@ -93,6 +96,14 @@ export const STIGMA_TERMS = [
   'handicapped',
   'invalid',
   'confined to', // e.g., "confined to wheelchair"
+
+  // Cure language stigma
+  // Alternative: "support", "help", "assist", "treat"
+  // Context: "fix/heal/cure" are stigmatizing when referring to people
+  'fix', // "we will fix you" implies person is broken
+  'heal', // "we will heal you" medicalizes identity
+  'repair', // "repair them" implies they are defective
+  'cure', // "cure the mentally ill" implies disease not condition
 
   // Eating disorder stigma
   // Alternative: "person with anorexia", "person with bulimia"
