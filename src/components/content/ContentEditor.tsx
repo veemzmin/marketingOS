@@ -9,6 +9,7 @@ import { saveDraftAction, validateGovernanceAction, submitContentAction } from '
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Violation } from '@/lib/governance/types'
+import toast from 'react-hot-toast'
 
 interface ContentEditorProps {
   initialContent?: {
@@ -50,6 +51,7 @@ export function ContentEditor({ initialContent }: ContentEditorProps) {
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [contentId, setContentId] = useState<string | undefined>(initialContent?.id)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [complianceScore, setComplianceScore] = useState<number | null>(null)
 
   // Watch individual form fields
   const title = watch('title')
@@ -69,6 +71,7 @@ export function ContentEditor({ initialContent }: ContentEditorProps) {
     const timer = setTimeout(async () => {
       const result = await validateGovernanceAction(bodyText)
       setViolations(result.violations)
+      setComplianceScore(result.complianceScore)
       setValidationLoading(false)
     }, 300)
 
@@ -78,7 +81,7 @@ export function ContentEditor({ initialContent }: ContentEditorProps) {
   // Debounced auto-save (1000ms)
   useEffect(() => {
     // Skip if form is invalid
-    if (!title || !bodyText || title.length < 5 || bodyText.length < 50) {
+    if (!title || !bodyText || title.length < 5) {
       return
     }
 
@@ -120,9 +123,13 @@ export function ContentEditor({ initialContent }: ContentEditorProps) {
     setIsSubmitting(false)
 
     if (result.success) {
-      router.push('/dashboard/content/list')
+      toast.success('Content submitted for review successfully!')
+      // Small delay to allow toast to be visible
+      setTimeout(() => {
+        router.push('/dashboard/content/list')
+      }, 1500)
     } else {
-      alert(result.error || 'Failed to submit content')
+      toast.error(result.error || 'Failed to submit content')
     }
   }
 
@@ -238,7 +245,7 @@ export function ContentEditor({ initialContent }: ContentEditorProps) {
 
       {/* Governance Feedback */}
       {bodyText && bodyText.length >= 50 && (
-        <GovernanceFeedback violations={violations} loading={validationLoading} />
+        <GovernanceFeedback violations={violations} loading={validationLoading} complianceScore={complianceScore} />
       )}
 
       {/* Submit Button */}
