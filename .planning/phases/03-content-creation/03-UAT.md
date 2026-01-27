@@ -1,9 +1,9 @@
 ---
-status: complete
+status: diagnosed
 phase: 03-content-creation
 source: [03-01-SUMMARY.md, 03-02-SUMMARY.md, 03-03-SUMMARY.md]
 started: 2026-01-26T14:00:00Z
-updated: 2026-01-26T14:30:00Z
+updated: 2026-01-26T14:35:00Z
 ---
 
 ## Current Test
@@ -83,37 +83,57 @@ skipped: 0
   reason: "User reported: pass but the save indicator is not visible until after 50 characters has been met"
   severity: minor
   test: 4
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "Auto-save useEffect guards setSaveState with bodyText.length < 50 condition, preventing Save indicator from appearing until 50+ characters entered"
+  artifacts:
+    - path: "src/components/content/ContentEditor.tsx"
+      issue: "Line 81 has bodyText.length < 50 check preventing save state transition"
+  missing:
+    - "Remove 50-char check from save state logic while keeping it for submission validation"
+  debug_session: ".planning/debug/uat-4-save-indicator.md"
 
 - truth: "Governance feedback appears showing violations for stigmatizing language"
   status: failed
   reason: "User reported: i put the following into the content area and it says no policy violations detected: In 2026, addicts are more crazier than ever. We will fix you."
   severity: major
   test: 5
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "Stigma validator uses strict word-boundary regex failing on inflections (addicts, crazier) and completely lacks cure language terms (fix, heal, repair)"
+  artifacts:
+    - path: "src/lib/governance/policies/stigma-language.ts"
+      issue: "Missing cure language terms and inflected form variants"
+  missing:
+    - "Add cure language terms: fix, heal, repair, cure"
+    - "Add inflected forms: addicts, crazier, craziest"
+  debug_session: ".planning/debug/governance-validation-miss.md"
 
 - truth: "Compliance score (0-100) is displayed on editor page"
   status: failed
   reason: "User reported: i see no score"
   severity: major
   test: 6
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "ContentEditor ignores complianceScore from validateGovernanceAction and has no UI element to display it"
+  artifacts:
+    - path: "src/components/content/ContentEditor.tsx"
+      issue: "Line 70-71 only destructures violations, ignoring complianceScore"
+    - path: "src/components/content/GovernanceFeedback.tsx"
+      issue: "No complianceScore prop or UI to display score"
+  missing:
+    - "Add complianceScore state variable to ContentEditor"
+    - "Extract complianceScore from validateGovernanceAction result"
+    - "Add complianceScore prop to GovernanceFeedback"
+    - "Add UI to display score (e.g., progress bar or text)"
+  debug_session: ".planning/debug/compliance-score-missing.md"
 
 - truth: "Success message appears when submitting content for review"
   status: failed
   reason: "User reported: success msg didn't appear, if it did it was a flash or split second before page refreshes to the list page"
   severity: minor
   test: 7
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "ContentEditor doesn't call toast.success() before router.push(), immediately redirecting without showing notification"
+  artifacts:
+    - path: "src/components/content/ContentEditor.tsx"
+      issue: "Line 119-123 calls router.push() directly without toast notification"
+  missing:
+    - "Import toast from react-hot-toast"
+    - "Call toast.success() after successful submit"
+    - "Delay navigation to allow toast to be visible"
+  debug_session: ".planning/debug/success-message-timing.md"
