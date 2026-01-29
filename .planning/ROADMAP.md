@@ -82,9 +82,9 @@ Plans:
 - [x] 03-01-PLAN.md — Content schema with versioning and form dependencies
 - [x] 03-02-PLAN.md — Server actions with governance integration
 - [x] 03-03-PLAN.md — Content editor UI and dashboard
-- [ ] 03-04-PLAN.md — UI feedback fixes (save indicator visibility, success toast)
-- [ ] 03-05-PLAN.md — Governance policy expansion (inflected forms, cure language)
-- [ ] 03-06-PLAN.md — Compliance score display in editor UI
+- [x] 03-04-PLAN.md — UI feedback fixes (save indicator visibility, success toast)
+- [x] 03-05-PLAN.md — Governance policy expansion (inflected forms, cure language)
+- [x] 03-06-PLAN.md — Compliance score display in editor UI
 
 ### Phase 4: Review Workflow
 **Goal**: Automated review routing where content flows through appropriate approvers with notifications
@@ -142,10 +142,10 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 |-------|----------------|--------|-----------|
 | 1. Foundation & Authentication | 8/8 | ✓ Complete | 2026-01-23 |
 | 2. Governance Engine | 2/2 | ✓ Complete | 2026-01-25 |
-| 3. Content Creation | 3/6 | In Progress - UAT gap closure | - |
+| 3. Content Creation | 6/6 | ✓ Complete | 2026-01-29 |
 | 4. Review Workflow | 0/4 | Planned | - |
 | 5. AI Generation | 0/5 | Planned | - |
 
 ---
 *Roadmap created: 2026-01-21*
-*Last updated: 2026-01-28*
+*Last updated: 2026-01-29*
