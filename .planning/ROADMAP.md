@@ -99,10 +99,13 @@ Plans:
   6. Reviewer receives email notification when content needs their review
   7. Creator receives notification of review decision with feedback
   8. System prevents content from progressing without all required approvals
-**Plans**: 3 plans
+**Plans**: 4 plans
 
 Plans:
-- TBD (will be created during phase planning)
+- [ ] 04-01-PLAN.md — Review workflow schema (ReviewAssignment, ReviewerType, multi-reviewer support)
+- [ ] 04-02-PLAN.md — Review queue and routing logic
+- [ ] 04-03-PLAN.md — Review UI with governance feedback
+- [ ] 04-04-PLAN.md — Review notifications
 
 ### Phase 5: AI Generation
 **Goal**: AI-powered content generation with governance constraints and n8n media generation
@@ -121,10 +124,14 @@ Plans:
   10. Creator can trigger image generation via n8n integration
   11. Creator can trigger video generation via n8n integration
   12. System tracks generation job status and updates content when complete
-**Plans**: 3 plans
+**Plans**: 5 plans
 
 Plans:
-- TBD (will be created during phase planning)
+- [ ] 05-01-PLAN.md — n8n integration layer (webhooks, job tracking, callbacks)
+- [ ] 05-02-PLAN.md — AI text generation with governance prompts
+- [ ] 05-03-PLAN.md — Blog post generation with SEO optimization
+- [ ] 05-04-PLAN.md — Social media generation with platform optimization
+- [ ] 05-05-PLAN.md — Image and video generation via n8n
 
 ## Progress
 
@@ -136,9 +143,9 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 1. Foundation & Authentication | 8/8 | ✓ Complete | 2026-01-23 |
 | 2. Governance Engine | 2/2 | ✓ Complete | 2026-01-25 |
 | 3. Content Creation | 3/6 | In Progress - UAT gap closure | - |
-| 4. Review Workflow | 0/TBD | Not started | - |
-| 5. AI Generation | 0/TBD | Not started | - |
+| 4. Review Workflow | 0/4 | Planned | - |
+| 5. AI Generation | 0/5 | Planned | - |
 
 ---
 *Roadmap created: 2026-01-21*
-*Last updated: 2026-01-26*
+*Last updated: 2026-01-28*
