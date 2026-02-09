@@ -7,6 +7,7 @@ import { ReviewActions } from "@/components/review/ReviewActions";
 import { ContentWithViolations } from "@/components/review/ContentWithViolations";
 import { ReviewHistory } from "@/components/review/ReviewHistory";
 import { formatDistanceToNow } from "date-fns";
+import { validateContentWithContext } from "@/lib/governance/engine";
 
 export default async function ReviewAssignmentPage({
   params,
@@ -74,14 +75,19 @@ export default async function ReviewAssignmentPage({
     (d) => d.reviewerType === assignment.reviewerType
   );
 
-  // Get governance violations (we'll need to re-validate)
-  // In a real implementation, this should be stored with the content version
-  const mockViolations: Array<{
-    type: string;
-    severity: "high" | "medium" | "low";
-    message: string;
-    matchedText?: string;
-  }> = []; // For now, empty array
+  const violationsForReview = latestVersion?.body
+    ? (
+        await validateContentWithContext(latestVersion.body, {
+          campaignId: assignment.content.campaignId ?? undefined,
+          clientId: assignment.content.clientId ?? undefined,
+        })
+      ).violations.map((violation) => ({
+        type: violation.policyId,
+        severity: violation.severity,
+        message: violation.explanation,
+        matchedText: violation.text,
+      }))
+    : [];
 
   return (
     <div className="container mx-auto py-8">
@@ -127,7 +133,7 @@ export default async function ReviewAssignmentPage({
               {latestVersion && (
                 <ContentWithViolations
                   content={latestVersion.body}
-                  violations={mockViolations}
+                  violations={violationsForReview}
                 />
               )}
             </CardContent>
@@ -167,14 +173,14 @@ export default async function ReviewAssignmentPage({
           )}
 
           {/* Policy Violations */}
-          {mockViolations.length > 0 && (
+          {violationsForReview.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Policy Violations</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {mockViolations.map((violation, index) => (
+                  {violationsForReview.map((violation, index) => (
                     <div
                       key={index}
                       className="p-3 border rounded-md bg-red-50 border-red-200"
