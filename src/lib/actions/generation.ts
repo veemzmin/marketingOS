@@ -5,6 +5,8 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { dispatchJob } from "@/lib/n8n/dispatch";
 import { GenerationJobType } from "@/lib/db/types";
+import { buildCampaignPrompt } from "@/lib/campaign/engine";
+import type { PromptContext } from "@/lib/ai/prompt-builder";
 
 export type Result<T = void> =
   | { success: true; data: T }
@@ -67,6 +69,49 @@ export async function createGenerationJob(data: {
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Create a campaign-aware generation job using templates and governance context
+ */
+export async function createCampaignGenerationJob(data: {
+  campaignId: string;
+  templateId?: string;
+  contentId?: string;
+  context: PromptContext;
+  parameters?: Record<string, any>;
+}): Promise<Result<{ jobId: string }>> {
+  try {
+    const { prompt, template } = await buildCampaignPrompt({
+      campaignId: data.campaignId,
+      templateId: data.templateId,
+      context: data.context,
+    });
+
+    const jobType =
+      template?.contentType === "blog"
+        ? GenerationJobType.TEXT_BLOG
+        : GenerationJobType.TEXT_SOCIAL;
+
+    return createGenerationJob({
+      contentId: data.contentId,
+      jobType,
+      prompt,
+      parameters: {
+        campaignId: data.campaignId,
+        templateId: data.templateId,
+        contentType: template?.contentType,
+        platform: template?.platform,
+        ...data.parameters,
+      },
+    });
+  } catch (error) {
+    console.error("Error creating campaign generation job:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to create campaign job",
     };
   }
 }
