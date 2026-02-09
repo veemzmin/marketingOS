@@ -45,7 +45,7 @@ function Verify2FAContent() {
 
       // Success - redirect to dashboard
       router.push("/dashboard")
-    } catch (err) {
+    } catch {
       setError("Network error. Please try again.")
       setLoading(false)
     }

@@ -7,6 +7,7 @@
 
 import type { Violation, ComplianceScore } from '../types'
 import { POLICY_WEIGHTS, PolicyId } from './weights'
+import { logger } from '@/lib/logger'
 
 /**
  * Calculate compliance score from violations.
@@ -49,7 +50,7 @@ export function calculateComplianceScore(violations: Violation[]): ComplianceSco
   byPolicy.forEach((violationSet, policyId) => {
     const weight = POLICY_WEIGHTS[policyId as PolicyId]
     if (!weight) {
-      console.warn(`Unknown policy ID: ${policyId}`)
+      logger.warn(`Unknown policy ID: ${policyId}`)
       return
     }
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/client"
 import { auth } from "@/auth"
+import { logger } from "@/lib/logger"
 
 export const dynamic = "force-dynamic"
 
@@ -53,7 +54,12 @@ export async function GET(request: NextRequest) {
     const action = searchParams.get("action")
 
     // Build filter
-    const where: any = {
+    const where: {
+      organizationId: string
+      createdAt?: { gte?: Date; lte?: Date }
+      resource?: string
+      action?: string
+    } = {
       organizationId: tenantId,
     }
 
@@ -76,7 +82,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch audit logs
-    const logs = await prisma.auditLog.findMany({
+    const logs: AuditLogWithUser[] = await prisma.auditLog.findMany({
       where,
       include: {
         user: {
@@ -103,7 +109,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error("Audit export error:", error)
+    logger.error("Audit export error:", error)
     return NextResponse.json({ error: "Export failed" }, { status: 500 })
   }
 }
@@ -111,7 +117,17 @@ export async function GET(request: NextRequest) {
 /**
  * Generate CSV from audit logs with proper escaping
  */
-function generateCSV(logs: any[]): string {
+type AuditLogWithUser = {
+  createdAt: Date
+  user?: { email: string | null; name: string | null } | null
+  action: string
+  resource: string
+  resourceId?: string | null
+  changes?: unknown | null
+  metadata?: unknown | null
+}
+
+function generateCSV(logs: AuditLogWithUser[]): string {
   // CSV header
   const header = [
     "Timestamp",

@@ -1,6 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
 
 export interface KnowledgeEntry {
   id: string;
@@ -49,7 +50,7 @@ export async function getRelevantFacts(
       lastVerified: e.lastVerified,
     }));
   } catch (error) {
-    console.error("Error searching knowledge base:", error);
+    logger.error("Error searching knowledge base:", error);
     return [];
   }
 }

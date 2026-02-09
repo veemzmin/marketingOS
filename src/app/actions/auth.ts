@@ -8,8 +8,9 @@ import { sendVerificationEmail } from "@/lib/email/client"
 import { redirect } from "next/navigation"
 import { randomUUID } from "crypto"
 import speakeasy from "speakeasy"
+import { logger } from "@/lib/logger"
 
-export async function loginAction(prevState: any, formData: FormData) {
+export async function loginAction(_prevState: unknown, formData: FormData) {
   const email = formData.get("email") as string
   const password = formData.get("password") as string
 
@@ -62,7 +63,7 @@ export async function loginAction(prevState: any, formData: FormData) {
   redirect("/dashboard")
 }
 
-export async function signupAction(_prevState: any, formData: FormData) {
+export async function signupAction(_prevState: unknown, formData: FormData) {
   const email = formData.get("email") as string
   const password = formData.get("password") as string
   const name = formData.get("name") as string
@@ -225,7 +226,7 @@ export async function verify2FAAction(email: string, code: string) {
     })
   } catch (error) {
     // Swallow the error - we'll handle session creation in auth callback
-    console.error("Session creation error:", error)
+    logger.error("Session creation error:", error)
   }
 
   return { success: true }

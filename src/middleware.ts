@@ -9,7 +9,7 @@ import type { NextRequest } from "next/server"
  * NOTE: Temporarily simplified for Phase 2 governance testing.
  * Full multi-tenant middleware will be re-enabled after Phase 2.
  */
-export async function middleware(request: NextRequest) {
+export async function middleware(_request: NextRequest) {
   // Temporarily disabled - will re-enable after Phase 2 testing
   // Multi-tenant context extraction requires Prisma which doesn't work in Edge runtime
   return NextResponse.next()

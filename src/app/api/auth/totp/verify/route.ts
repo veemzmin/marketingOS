@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/db/client"
 import speakeasy from "speakeasy"
+import { logger } from "@/lib/logger"
 
 export async function POST(request: NextRequest) {
   try {
@@ -72,7 +73,7 @@ export async function POST(request: NextRequest) {
       message: "2FA enabled successfully",
     })
   } catch (error) {
-    console.error("TOTP verification error:", error)
+    logger.error("TOTP verification error:", error)
     return NextResponse.json(
       { error: "Failed to verify TOTP code" },
       { status: 500 }

@@ -39,14 +39,12 @@ export function RoleChangeDropdown({
       }
 
       setRole(newRole)
-    } catch (err) {
+    } catch {
       setError("Failed to change role")
     } finally {
       setLoading(false)
     }
   }
-
-  const currentRoleOption = ROLE_OPTIONS.find((opt) => opt.value === role)
 
   return (
     <div>

@@ -4,9 +4,10 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { dispatchJob } from "@/lib/n8n/dispatch";
-import { GenerationJobType } from "@/lib/db/types";
+import { GenerationJobType, GenerationJobStatus } from "@/lib/db/types";
 import { buildCampaignPrompt } from "@/lib/campaign/engine";
 import type { PromptContext } from "@/lib/ai/prompt-builder";
+import { logger } from "@/lib/logger";
 
 export type Result<T = void> =
   | { success: true; data: T }
@@ -19,7 +20,7 @@ export async function createGenerationJob(data: {
   contentId?: string;
   jobType: GenerationJobType;
   prompt: string;
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
 }): Promise<Result<{ jobId: string }>> {
   try {
     const user = await getCurrentUser();
@@ -65,7 +66,7 @@ export async function createGenerationJob(data: {
 
     return { success: true, data: { jobId: result.jobId! } };
   } catch (error) {
-    console.error("Error creating generation job:", error);
+    logger.error("Error creating generation job:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
@@ -81,7 +82,7 @@ export async function createCampaignGenerationJob(data: {
   templateId?: string;
   contentId?: string;
   context: PromptContext;
-  parameters?: Record<string, any>;
+  parameters?: Record<string, unknown>;
 }): Promise<Result<{ jobId: string }>> {
   try {
     const { prompt, template } = await buildCampaignPrompt({
@@ -108,7 +109,7 @@ export async function createCampaignGenerationJob(data: {
       },
     });
   } catch (error) {
-    console.error("Error creating campaign generation job:", error);
+    logger.error("Error creating campaign generation job:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to create campaign job",
@@ -144,7 +145,7 @@ export async function getJobStatus(jobId: string) {
 
     return { success: true, data: job };
   } catch (error) {
-    console.error("Error getting job status:", error);
+    logger.error("Error getting job status:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
@@ -179,7 +180,7 @@ export async function getContentJobs(contentId: string) {
 
     return { success: true, data: jobs };
   } catch (error) {
-    console.error("Error getting content jobs:", error);
+    logger.error("Error getting content jobs:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
@@ -193,7 +194,7 @@ export async function getContentJobs(contentId: string) {
  */
 export async function getOrganizationJobs(filters?: {
   jobType?: GenerationJobType;
-  status?: string;
+  status?: GenerationJobStatus;
   limit?: number;
 }) {
   try {
@@ -211,7 +212,7 @@ export async function getOrganizationJobs(filters?: {
       where: {
         organizationId: userOrg.organizationId,
         ...(filters?.jobType && { jobType: filters.jobType }),
-        ...(filters?.status && { status: filters.status as any }),
+        ...(filters?.status && { status: filters.status }),
       },
       include: {
         content: {
@@ -229,7 +230,7 @@ export async function getOrganizationJobs(filters?: {
 
     return { success: true, data: jobs };
   } catch (error) {
-    console.error("Error getting organization jobs:", error);
+    logger.error("Error getting organization jobs:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
@@ -280,7 +281,7 @@ export async function cancelJob(jobId: string): Promise<Result> {
 
     return { success: true, data: undefined };
   } catch (error) {
-    console.error("Error cancelling job:", error);
+    logger.error("Error cancelling job:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",

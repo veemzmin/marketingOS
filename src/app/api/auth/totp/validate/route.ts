@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/client"
 import speakeasy from "speakeasy"
+import { logger } from "@/lib/logger"
 
 export async function POST(request: NextRequest) {
   try {
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest) {
       message: "TOTP code verified successfully",
     })
   } catch (error) {
-    console.error("TOTP validation error:", error)
+    logger.error("TOTP validation error:", error)
     return NextResponse.json(
       { error: "Failed to validate TOTP code" },
       { status: 500 }

@@ -145,7 +145,7 @@ export function ContentEditor({ initialContent }: ContentEditorProps) {
     return () => clearTimeout(timer)
   }, [title, bodyText, topic, audience, tone, contentId])
 
-  const onSubmit = async (data: ContentFormData) => {
+  const onSubmit = async (_data: ContentFormData) => {
     if (!contentId) {
       alert('Content must be saved before submitting')
       return

@@ -49,7 +49,7 @@ export function GovernanceFeedback({ violations, loading, complianceScore }: Gov
             </div>
           </div>
         )}
-        <p className="text-green-700 font-medium">✓ No policy violations detected</p>
+        <p className="text-green-700 font-medium">No policy violations detected</p>
       </div>
     )
   }
@@ -79,7 +79,9 @@ export function GovernanceFeedback({ violations, loading, complianceScore }: Gov
             <div className="font-medium text-yellow-800">{v.policyId}</div>
             <div className="text-yellow-700">{v.explanation}</div>
             {v.text && (
-              <div className="text-yellow-600 italic mt-1">Found: "{v.text}"</div>
+              <div className="text-yellow-600 italic mt-1">
+                Found: &quot;{v.text}&quot;
+              </div>
             )}
           </li>
         ))}

@@ -174,7 +174,7 @@ export default async function ReviewAssignmentPage({
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {mockViolations.map((violation: any, index: number) => (
+                  {mockViolations.map((violation, index) => (
                     <div
                       key={index}
                       className="p-3 border rounded-md bg-red-50 border-red-200"
@@ -195,7 +195,6 @@ export default async function ReviewAssignmentPage({
           {/* Review Actions */}
           <ReviewActions
             assignmentId={assignment.id}
-            reviewerType={assignment.reviewerType}
             existingDecision={existingDecision}
           />
         </div>

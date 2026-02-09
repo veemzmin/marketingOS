@@ -6,10 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { submitDecision } from "@/lib/actions/review";
+import { logger } from "@/lib/logger";
 
 interface ReviewActionsProps {
   assignmentId: string;
-  reviewerType: string;
   existingDecision?: {
     id: string;
     decision: string;
@@ -25,11 +25,13 @@ interface ReviewActionsProps {
 
 export function ReviewActions({
   assignmentId,
-  reviewerType,
   existingDecision,
 }: ReviewActionsProps) {
+  type ReviewDecisionValue = "APPROVED" | "CHANGES_REQUESTED" | "REJECTED";
+
   const router = useRouter();
-  const [selectedDecision, setSelectedDecision] = useState<string | null>(null);
+  const [selectedDecision, setSelectedDecision] =
+    useState<ReviewDecisionValue | null>(null);
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -52,7 +54,7 @@ export function ReviewActions({
     try {
       const result = await submitDecision({
         assignmentId,
-        decision: selectedDecision as any,
+        decision: selectedDecision,
         comment: comment.trim() || undefined,
       });
 
@@ -64,7 +66,7 @@ export function ReviewActions({
         alert(result.error || "Failed to submit review");
       }
     } catch (error) {
-      console.error("Error submitting review:", error);
+      logger.error("Error submitting review:", error);
       alert("Failed to submit review");
     } finally {
       setIsSubmitting(false);

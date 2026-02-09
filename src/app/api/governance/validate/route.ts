@@ -8,13 +8,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { validateContentWithContext } from '@/lib/governance/engine'
 import { calculateComplianceScore } from '@/lib/governance/scoring/calculator'
+import { logger } from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { content, contentId, campaignId, profileId, clientId } = body as {
+    const { content, campaignId, profileId, clientId } = body as {
       content?: string
-      contentId?: string
       campaignId?: string
       profileId?: string
       clientId?: string
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       passed: complianceScore.passed,
     })
   } catch (error) {
-    console.error('Validation failed:', error)
+    logger.error('Validation failed:', error)
     const errorMessage = error instanceof Error ? error.message : 'Validation service error'
     return NextResponse.json(
       { error: errorMessage },

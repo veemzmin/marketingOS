@@ -2,6 +2,7 @@ import { sendEmail } from "@/lib/email/client";
 import { db } from "@/lib/db";
 import { logAudit } from "@/lib/audit";
 import { ReviewerType } from "@/lib/db/types";
+import { logger } from "@/lib/logger";
 
 const BASE_URL = process.env.NEXTAUTH_URL || "http://localhost:3000";
 
@@ -33,7 +34,7 @@ export async function notifyReviewersOfNewContent(
     });
 
     if (!content) {
-      console.error("Content not found for notification");
+      logger.error("Content not found for notification");
       return;
     }
 
@@ -132,7 +133,7 @@ You are receiving this because you are a reviewer for ${content.organization.nam
       });
     }
   } catch (error) {
-    console.error("Error notifying reviewers:", error);
+    logger.error("Error notifying reviewers:", error);
   }
 }
 
@@ -163,7 +164,7 @@ export async function notifyCreatorOfReviewStart(
     });
 
     if (!content) {
-      console.error("Content not found for notification");
+      logger.error("Content not found for notification");
       return;
     }
 
@@ -228,7 +229,7 @@ View your content: ${contentUrl}
       },
     });
   } catch (error) {
-    console.error("Error notifying creator:", error);
+    logger.error("Error notifying creator:", error);
   }
 }
 
@@ -263,7 +264,7 @@ export async function notifyCreatorOfDecision(
     });
 
     if (!content) {
-      console.error("Content not found for notification");
+      logger.error("Content not found for notification");
       return;
     }
 
@@ -356,6 +357,6 @@ View your content: ${contentUrl}
       },
     });
   } catch (error) {
-    console.error("Error notifying creator of decision:", error);
+    logger.error("Error notifying creator of decision:", error);
   }
 }
