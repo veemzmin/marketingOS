@@ -14,13 +14,24 @@ if (!workflowId || !apiUrl || !apiKey) {
 
 const workflow = JSON.parse(fs.readFileSync(workflowPath, 'utf8'))
 
+// n8n API rejects extra fields from exported JSON (e.g., meta, pinData, versionId).
+// Keep only the allowed top-level fields.
+const payload = {
+  name: workflow.name,
+  nodes: workflow.nodes,
+  connections: workflow.connections,
+  settings: workflow.settings || {},
+  active: Boolean(workflow.active),
+  tags: workflow.tags || [],
+}
+
 const response = await fetch(`${apiUrl.replace(/\/$/, '')}/api/v1/workflows/${workflowId}`, {
   method: 'PUT',
   headers: {
     'Content-Type': 'application/json',
     'X-N8N-API-KEY': apiKey,
   },
-  body: JSON.stringify(workflow),
+  body: JSON.stringify(payload),
 })
 
 if (!response.ok) {
