@@ -83,6 +83,15 @@ const navItems: NavItem[] = [
       </svg>
     ),
   },
+  {
+    label: 'Industry Profiles',
+    href: '/dashboard/industry-profiles',
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-3-3v6m8 2a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h6a2 2 0 012 2v8z" />
+      </svg>
+    ),
+  },
 ]
 
 export function DashboardNav() {
