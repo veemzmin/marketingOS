@@ -164,6 +164,43 @@ export default async function ReviewAssignmentPage({
 
         {/* Right column - Review Actions */}
         <div className="space-y-6">
+          {/* Review Snapshot */}
+          {latestVersion && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Review Snapshot</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Version</span>
+                  <span className="font-medium">v{latestVersion.versionNumber}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Captured</span>
+                  <span className="font-medium">
+                    {new Date(latestVersion.createdAt).toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Compliance</span>
+                  <span className="font-medium">
+                    {latestVersion.complianceScore}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Violations</span>
+                  <span className="font-medium">{violationsForReview.length}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Source</span>
+                  <span className="font-medium">
+                    {storedViolations ? "Stored snapshot" : "Re-validated"}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Compliance Score */}
           {assignment.content.complianceScore !== null && (
             <Card>
