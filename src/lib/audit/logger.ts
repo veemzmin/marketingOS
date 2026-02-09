@@ -1,6 +1,44 @@
 import { prisma } from "@/lib/db/client"
 import { headers } from "next/headers"
 
+export interface AuditLogEntry {
+  organizationId: string
+  userId?: string | null
+  action: string
+  resource: string
+  resourceId?: string | null
+  changes?: Record<string, any> | null
+  metadata?: Record<string, any> | null
+}
+
+/**
+ * Log a generic audit entry.
+ *
+ * Prefer this for most mutations to keep audit data consistent.
+ */
+export async function logAudit(entry: AuditLogEntry): Promise<void> {
+  const headersList = await headers()
+  const tenantId = headersList.get("x-tenant-id")
+
+  // If tenant context is available, prefer it over the provided organizationId
+  const organizationId = tenantId || entry.organizationId
+  if (!organizationId) {
+    throw new Error("Cannot log audit without organization context")
+  }
+
+  await prisma.auditLog.create({
+    data: {
+      organizationId,
+      userId: entry.userId ?? undefined,
+      action: entry.action,
+      resource: entry.resource,
+      resourceId: entry.resourceId ?? undefined,
+      changes: entry.changes ?? undefined,
+      metadata: entry.metadata ?? undefined,
+    },
+  })
+}
+
 /**
  * Log a role change to the audit trail
  *

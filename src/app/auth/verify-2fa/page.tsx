@@ -3,8 +3,19 @@
 import { useState } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { verify2FAAction } from "@/app/actions/auth"
+import { Suspense } from "react"
+
+export const dynamic = "force-dynamic"
 
 export default function Verify2FAPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50" />}>
+      <Verify2FAContent />
+    </Suspense>
+  )
+}
+
+function Verify2FAContent() {
   const [code, setCode] = useState<string>("")
   const [error, setError] = useState<string>("")
   const [loading, setLoading] = useState<boolean>(false)
