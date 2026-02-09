@@ -48,6 +48,7 @@ export default async function ReviewAssignmentPage({
           },
         },
       },
+      contentVersion: true,
       assignedUser: {
         select: {
           id: true,
@@ -70,7 +71,8 @@ export default async function ReviewAssignmentPage({
     redirect("/dashboard/reviews");
   }
 
-  const latestVersion = assignment.content.versions[0];
+  const latestVersion =
+    assignment.contentVersion || assignment.content.versions[0];
   const existingDecision = assignment.content.reviewDecisions.find(
     (d) => d.reviewerType === assignment.reviewerType
   );

@@ -333,6 +333,7 @@ model ContentVersion {
   // Relationships
   content   Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
   createdBy User    @relation("VersionCreator", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  reviewAssignments ReviewAssignment[]
 
   @@unique([contentId, versionNumber])
   @@index([contentId])
@@ -368,6 +369,7 @@ model ReviewDecision {
 model ReviewAssignment {
   id             String       @id @default(cuid())
   contentId      String
+  contentVersionId String
   reviewerType   ReviewerType
   assignedUserId String? // Null = any reviewer of this type can claim
   status         String       @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED
@@ -376,10 +378,12 @@ model ReviewAssignment {
 
   // Relationships
   content      Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  contentVersion ContentVersion @relation(fields: [contentVersionId], references: [id], onDelete: Cascade)
   assignedUser User?   @relation("ReviewAssignments", fields: [assignedUserId], references: [id])
 
-  @@unique([contentId, reviewerType])
+  @@unique([contentId, reviewerType, contentVersionId])
   @@index([contentId])
+  @@index([contentVersionId])
   @@index([assignedUserId])
   @@index([status])
   @@map("review_assignments")
