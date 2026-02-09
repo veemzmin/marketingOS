@@ -21,7 +21,6 @@ const payload = {
   nodes: workflow.nodes,
   connections: workflow.connections,
   settings: workflow.settings || {},
-  tags: workflow.tags || [],
 }
 
 const response = await fetch(`${apiUrl.replace(/\/$/, '')}/api/v1/workflows/${workflowId}`, {
