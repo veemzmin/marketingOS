@@ -237,6 +237,14 @@ export default async function ReviewAssignmentPage({
                     {storedViolations ? "Stored snapshot" : "Re-validated"}
                   </span>
                 </div>
+                <div className="pt-2">
+                  <a
+                    href={`/audit?resource=content&resourceId=${assignment.content.id}&action=submit`}
+                    className="text-blue-600 hover:text-blue-800 text-sm"
+                  >
+                    View audit trail
+                  </a>
+                </div>
               </CardContent>
             </Card>
           )}
