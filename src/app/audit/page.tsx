@@ -2,6 +2,7 @@ import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/db/client"
 import { headers } from "next/headers"
+import { AppShell } from "@/components/layout/AppShell"
 
 /**
  * Audit Log Viewer
@@ -81,7 +82,7 @@ export default async function AuditPage({
   })
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <AppShell>
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="rounded-lg bg-white p-8 shadow-md">
           <div className="mb-6 flex items-center justify-between border-b pb-4">
@@ -196,6 +197,6 @@ export default async function AuditPage({
           )}
         </div>
       </div>
-    </div>
+    </AppShell>
   )
 }

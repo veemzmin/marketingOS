@@ -1,6 +1,7 @@
 import { requireAdmin } from "@/lib/auth/permissions"
 import { prisma } from "@/lib/db/client"
 import { headers } from "next/headers"
+import { AppShell } from "@/components/layout/AppShell"
 
 export default async function AdminOrganizationsPage() {
   // Require admin permission
@@ -32,6 +33,7 @@ export default async function AdminOrganizationsPage() {
   }
 
   return (
+    <AppShell>
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Organization Details</h1>
@@ -88,5 +90,6 @@ export default async function AdminOrganizationsPage() {
         </div>
       </div>
     </div>
+    </AppShell>
   )
 }
