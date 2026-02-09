@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/client"
 import { headers } from "next/headers"
 import Link from "next/link"
 import { RoleChangeDropdown } from "./role-change-dropdown"
+import { AppShell } from "@/components/layout/AppShell"
 
 export default async function AdminUsersPage() {
   // Require admin permission
@@ -44,6 +45,7 @@ export default async function AdminUsersPage() {
   })
 
   return (
+    <AppShell>
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">User Management</h1>
@@ -138,5 +140,6 @@ export default async function AdminUsersPage() {
         )}
       </div>
     </div>
+    </AppShell>
   )
 }
