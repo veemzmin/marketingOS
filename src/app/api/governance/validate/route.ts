@@ -6,15 +6,18 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@/auth'
 import { validateContentWithContext } from '@/lib/governance/engine'
 import { calculateComplianceScore } from '@/lib/governance/scoring/calculator'
 import { logger } from '@/lib/logger'
+import { logAudit } from '@/lib/audit'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { content, campaignId, profileId, clientId } = body as {
+    const { content, contentId, campaignId, profileId, clientId } = body as {
       content?: string
+      contentId?: string
       campaignId?: string
       profileId?: string
       clientId?: string
@@ -33,24 +36,27 @@ export async function POST(request: NextRequest) {
       await validateContentWithContext(content, { campaignId, profileId, clientId })
     const complianceScore = calculateComplianceScore(violations)
 
-    // TODO: Re-enable authentication and audit logging after Phase 2 testing
-    // const session = await auth()
-    // if (session?.user?.organizationId) {
-    //   await prisma.auditLog.create({
-    //     data: {
-    //       organizationId: session.user.organizationId,
-    //       userId: session.user.id,
-    //       action: 'governance-validation',
-    //       resource: 'content',
-    //       resourceId: contentId || 'test',
-    //       changes: {
-    //         complianceScore: complianceScore.score,
-    //         violationCount: violations.length,
-    //         policies: violations.map(v => v.policyId),
-    //       },
-    //     },
-    //   })
-    // }
+    const session = await auth()
+    const tenantId = request.headers.get('x-tenant-id')
+    if (session?.user?.id && tenantId) {
+      await logAudit({
+        organizationId: tenantId,
+        userId: session.user.id,
+        action: 'governance-validation',
+        resource: 'content',
+        resourceId: contentId || 'test',
+        changes: {
+          complianceScore: complianceScore.score,
+          violationCount: violations.length,
+          policies: violations.map(v => v.policyId),
+        },
+        metadata: {
+          campaignId,
+          profileId,
+          clientId,
+        },
+      })
+    }
 
     return NextResponse.json({
       success: true,
