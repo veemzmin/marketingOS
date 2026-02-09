@@ -1,18 +1,107 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
+import { getToken } from "next-auth/jwt"
 
 /**
  * Next.js Middleware
  *
  * Runs on every request matching the config.matcher below.
  *
- * NOTE: Temporarily simplified for Phase 2 governance testing.
- * Full multi-tenant middleware will be re-enabled after Phase 2.
+ * NOTE: Tenant context is resolved via an internal API to avoid Prisma in Edge runtime.
  */
-export async function middleware(_request: NextRequest) {
-  // Temporarily disabled - will re-enable after Phase 2 testing
-  // Multi-tenant context extraction requires Prisma which doesn't work in Edge runtime
-  return NextResponse.next()
+export async function middleware(request: NextRequest) {
+  const token = await getToken({
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET,
+  })
+
+  if (!token?.id) {
+    return NextResponse.next()
+  }
+
+  const pathname = request.nextUrl.pathname
+  const host = request.headers.get("host") || ""
+  const hostParts = host.split(".")
+  const hasSubdomain = hostParts.length >= 3 && hostParts[0] !== "www"
+  const subdomainSlug = hasSubdomain ? hostParts[0] : null
+  const orgPathMatch = pathname.match(/^\/org\/([^\/]+)/)
+  const pathSlug = orgPathMatch ? orgPathMatch[1] : null
+  const requestedSlug = subdomainSlug || pathSlug
+
+  const tenantIdCookie = request.cookies.get("tenant-id")?.value
+  const tenantSlugCookie = request.cookies.get("tenant-slug")?.value
+
+  const shouldResolve =
+    !tenantIdCookie ||
+    (requestedSlug && requestedSlug !== tenantSlugCookie)
+
+  let tenantId = tenantIdCookie
+  let tenantSlug = tenantSlugCookie || requestedSlug || null
+
+  if (shouldResolve) {
+    const resolveUrl = new URL("/api/tenant/resolve", request.url)
+    if (requestedSlug) {
+      resolveUrl.searchParams.set("slug", requestedSlug)
+    }
+
+    const resolveResponse = await fetch(resolveUrl, {
+      headers: {
+        cookie: request.headers.get("cookie") || "",
+      },
+      cache: "no-store",
+    })
+
+    if (!resolveResponse.ok) {
+      if (pathname.startsWith("/api/")) {
+        return NextResponse.json(
+          { error: "Unauthorized tenant" },
+          { status: resolveResponse.status }
+        )
+      }
+
+      return NextResponse.redirect(new URL("/unauthorized", request.url))
+    }
+
+    const resolved = (await resolveResponse.json()) as {
+      tenantId: string
+      organizationSlug: string
+    }
+
+    tenantId = resolved.tenantId
+    tenantSlug = resolved.organizationSlug
+  }
+
+  if (!tenantId) {
+    return NextResponse.next()
+  }
+
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set("x-tenant-id", tenantId)
+  requestHeaders.set("x-user-id", String(token.id))
+  if (tenantSlug) {
+    requestHeaders.set("x-tenant-slug", tenantSlug)
+  }
+
+  const response = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  })
+
+  response.cookies.set("tenant-id", tenantId, {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+  })
+  if (tenantSlug) {
+    response.cookies.set("tenant-slug", tenantSlug, {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+    })
+  }
+
+  return response
 }
 
 /**
@@ -39,9 +128,8 @@ export const config = {
      * - /api/auth/* (authentication API)
      * - /verify-email (email verification page)
      * - /unauthorized (access denied page)
-     * - /governance/* (governance test pages - temporarily excluded)
-     * - /api/governance/* (governance API - temporarily excluded)
+     * - /api/tenant/resolve (tenant resolver API)
      */
-    "/((?!_next/static|_next/image|favicon.ico|auth|api/auth|verify-email|unauthorized|governance|api/governance).*)",
+    "/((?!_next/static|_next/image|favicon.ico|auth|api/auth|api/tenant/resolve|verify-email|unauthorized).*)",
   ],
 }
