@@ -3,6 +3,11 @@ import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 
 interface ReviewHistoryProps {
+  submission?: {
+    submittedBy?: { name: string | null; email: string } | null
+    submittedAt?: Date | null
+    submittedFromStatus?: string | null
+  }
   decisions: Array<{
     id: string;
     reviewerType: string;
@@ -17,7 +22,7 @@ interface ReviewHistoryProps {
   }>;
 }
 
-export function ReviewHistory({ decisions }: ReviewHistoryProps) {
+export function ReviewHistory({ decisions, submission }: ReviewHistoryProps) {
   if (decisions.length === 0) {
     return null;
   }
@@ -28,6 +33,34 @@ export function ReviewHistory({ decisions }: ReviewHistoryProps) {
         <CardTitle>Review History</CardTitle>
       </CardHeader>
       <CardContent>
+        {submission && (
+          <div className="mb-6 rounded-md border border-gray-200 bg-gray-50 p-4 text-sm">
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+              <div>
+                <div className="text-xs text-muted-foreground">Submitted By</div>
+                <div className="font-medium">
+                  {submission.submittedBy
+                    ? submission.submittedBy.name || submission.submittedBy.email
+                    : "Unknown"}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground">Submitted At</div>
+                <div className="font-medium">
+                  {submission.submittedAt
+                    ? new Date(submission.submittedAt).toLocaleString()
+                    : "Not submitted"}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground">Status At Submit</div>
+                <div className="font-medium">
+                  {submission.submittedFromStatus || "Unknown"}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="space-y-4">
           {decisions.map((decision) => (
             <div

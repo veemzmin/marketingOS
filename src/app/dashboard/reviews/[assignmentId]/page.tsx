@@ -165,7 +165,18 @@ export default async function ReviewAssignmentPage({
           </Card>
 
           {/* Review History */}
-          <ReviewHistory decisions={assignment.content.reviewDecisions} />
+          <ReviewHistory
+            decisions={assignment.content.reviewDecisions}
+            submission={
+              latestVersion
+                ? {
+                    submittedBy: latestVersion.submittedBy,
+                    submittedAt: latestVersion.submittedAt,
+                    submittedFromStatus: latestVersion.submittedFromStatus,
+                  }
+                : undefined
+            }
+          />
         </div>
 
         {/* Right column - Review Actions */}
