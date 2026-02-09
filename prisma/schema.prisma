@@ -326,6 +326,7 @@ model ContentVersion {
   audience        String // patients, families, professionals, general
   tone            String // informative, supportive, clinical, motivational
   complianceScore Int // Score at time of version creation
+  governanceViolations Json? // Stored violations for audit/review
   createdByUserId String
   createdAt       DateTime @default(now())
 

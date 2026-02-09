@@ -75,7 +75,24 @@ export default async function ReviewAssignmentPage({
     (d) => d.reviewerType === assignment.reviewerType
   );
 
-  const violationsForReview = latestVersion?.body
+  const storedViolations = Array.isArray(
+    latestVersion?.governanceViolations
+  )
+    ? latestVersion?.governanceViolations
+    : null;
+
+  const violationsForReview = storedViolations
+    ? storedViolations.map((violation) => ({
+        type: String((violation as { policyId?: string }).policyId || "policy"),
+        severity: (violation as { severity?: "high" | "medium" | "low" })
+          .severity || "medium",
+        message: String(
+          (violation as { explanation?: string }).explanation ||
+            "Policy violation"
+        ),
+        matchedText: (violation as { text?: string }).text,
+      }))
+    : latestVersion?.body
     ? (
         await validateContentWithContext(latestVersion.body, {
           campaignId: assignment.content.campaignId ?? undefined,
