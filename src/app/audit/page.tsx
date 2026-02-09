@@ -87,7 +87,13 @@ export default async function AuditPage({
           <div className="mb-6 flex items-center justify-between border-b pb-4">
             <h1 className="text-3xl font-bold text-gray-900">Audit Logs</h1>
             <a
-              href="/api/audit/export"
+              href={`/api/audit/export${resource || resourceId || action ? `?${new URLSearchParams(
+                {
+                  ...(resource ? { resource } : {}),
+                  ...(resourceId ? { resourceId } : {}),
+                  ...(action ? { action } : {}),
+                }
+              ).toString()}` : ""}`}
               className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
             >
               Export CSV

@@ -52,12 +52,14 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get("endDate")
     const resource = searchParams.get("resource")
     const action = searchParams.get("action")
+    const resourceId = searchParams.get("resourceId")
 
     // Build filter
     const where: {
       organizationId: string
       createdAt?: { gte?: Date; lte?: Date }
       resource?: string
+      resourceId?: string
       action?: string
     } = {
       organizationId: tenantId,
@@ -75,6 +77,10 @@ export async function GET(request: NextRequest) {
 
     if (resource) {
       where.resource = resource
+    }
+
+    if (resourceId) {
+      where.resourceId = resourceId
     }
 
     if (action) {
