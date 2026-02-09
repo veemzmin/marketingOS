@@ -260,9 +260,11 @@ export function ContentEditor({ initialContent }: ContentEditorProps) {
               value={selectedTemplateId}
               onChange={(e) => setSelectedTemplateId(e.target.value)}
               className="w-full border border-gray-300 rounded px-3 py-2"
-              disabled={!campaignIdInput || templatesLoading}
+              disabled={templatesLoading}
             >
-              <option value="">Select a template</option>
+              <option value="">
+                {campaignIdInput ? 'Select a template' : 'Enter campaign ID to load templates'}
+              </option>
               {templates.map((template) => (
                 <option key={template.id} value={template.id}>
                   {template.name}
@@ -271,6 +273,11 @@ export function ContentEditor({ initialContent }: ContentEditorProps) {
             </select>
             {templatesLoading && (
               <p className="text-xs text-gray-500 mt-1">Loading templates...</p>
+            )}
+            {!campaignIdInput && !templatesLoading && (
+              <p className="text-xs text-gray-500 mt-1">
+                Add a campaign ID to load templates.
+              </p>
             )}
           </div>
         </div>
