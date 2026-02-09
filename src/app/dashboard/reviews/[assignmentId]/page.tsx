@@ -48,7 +48,13 @@ export default async function ReviewAssignmentPage({
           },
         },
       },
-      contentVersion: true,
+      contentVersion: {
+        include: {
+          submittedBy: {
+            select: { id: true, name: true, email: true },
+          },
+        },
+      },
       assignedUser: {
         select: {
           id: true,
@@ -179,6 +185,29 @@ export default async function ReviewAssignmentPage({
                   <span className="text-muted-foreground">Captured</span>
                   <span className="font-medium">
                     {new Date(latestVersion.createdAt).toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Submitted By</span>
+                  <span className="font-medium">
+                    {latestVersion.submittedBy
+                      ? latestVersion.submittedBy.name ||
+                        latestVersion.submittedBy.email
+                      : "Unknown"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Submitted At</span>
+                  <span className="font-medium">
+                    {latestVersion.submittedAt
+                      ? new Date(latestVersion.submittedAt).toLocaleString()
+                      : "Not submitted"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Status At Submit</span>
+                  <span className="font-medium">
+                    {latestVersion.submittedFromStatus || "Unknown"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
