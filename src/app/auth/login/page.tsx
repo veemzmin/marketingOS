@@ -4,7 +4,7 @@ import { loginAction } from "@/app/actions/auth"
 import { useFormState } from "react-dom"
 import { useFormStatus } from "react-dom"
 import { useSearchParams } from "next/navigation"
-import { Suspense } from "react"
+import { Suspense, useState } from "react"
 
 export const dynamic = "force-dynamic"
 
@@ -34,6 +34,13 @@ function LoginForm() {
   const [state, formAction] = useFormState(loginAction, undefined)
   const searchParams = useSearchParams()
   const verified = searchParams.get("verified") === "true"
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+
+  const DEV_CREDENTIALS = {
+    email: "admin@example.com",
+    password: "password123",
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
@@ -67,6 +74,8 @@ function LoginForm() {
               name="email"
               type="email"
               required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-blue-500"
               placeholder="you@example.com"
             />
@@ -81,9 +90,32 @@ function LoginForm() {
               name="password"
               type="password"
               required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-blue-500"
               placeholder="Enter your password"
             />
+          </div>
+
+          <div className="rounded-md border border-gray-200 bg-gray-50 p-3 text-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-medium text-gray-900">Quick Login (Dev)</div>
+                <div className="text-xs text-gray-600">
+                  Autofills local dev credentials
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail(DEV_CREDENTIALS.email)
+                  setPassword(DEV_CREDENTIALS.password)
+                }}
+                className="rounded-md bg-white px-3 py-1 text-xs font-medium text-blue-600 shadow-sm ring-1 ring-inset ring-blue-200 hover:bg-blue-50"
+              >
+                Fill
+              </button>
+            </div>
           </div>
 
           <SubmitButton />
