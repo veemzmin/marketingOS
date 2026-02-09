@@ -71,6 +71,8 @@ export async function submitForReview(
     const requiredReviewers = getRequiredReviewers(latestVersion?.topic);
 
     // Create review assignments
+    const submittedAt = new Date();
+
     await db.$transaction(async (tx) => {
       // Create assignments for each required reviewer type
       for (const reviewerType of requiredReviewers) {
@@ -87,7 +89,7 @@ export async function submitForReview(
       await tx.contentVersion.update({
         where: { id: latestVersion.id },
         data: {
-          submittedAt: new Date(),
+          submittedAt,
           submittedByUserId: user.id,
           submittedFromStatus: content.status as ContentStatus,
         },
@@ -108,6 +110,12 @@ export async function submitForReview(
         resourceId: contentId,
         metadata: {
           requiredReviewers,
+        },
+        changes: {
+          submittedAt,
+          submittedByUserId: user.id,
+          submittedFromStatus: content.status,
+          contentVersionId: latestVersion.id,
         },
       });
     });
