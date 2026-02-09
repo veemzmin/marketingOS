@@ -7,6 +7,7 @@ import {
   createResearchProjectAction,
   startResearchRunAction,
   completeResearchRunAction,
+  refreshResearchSourcesAction,
 } from '@/lib/actions/research'
 
 const industryOptions = [
@@ -25,6 +26,14 @@ const outputOrder = [
   'ACTION_PLAN',
   'IDEAS',
 ]
+
+function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
 
 function formatDate(value: Date) {
   return value.toLocaleString('en-US', {
@@ -71,6 +80,7 @@ export default async function ResearchPage({
   })
 
   const selectedProjectId = searchParams?.projectId || projects[0]?.id || ''
+  const selectedProject = projects.find((project) => project.id === selectedProjectId)
 
   const recentRuns = await prisma.researchRun.findMany({
     where: { project: { organizationId } },
@@ -104,6 +114,17 @@ export default async function ResearchPage({
   if (activeRun?.project.organizationId !== organizationId) {
     activeRun = null
   }
+
+  const sourceLibrary = selectedProject
+    ? await prisma.knowledgeEntry.findMany({
+        where: {
+          organizationId,
+          category: `industry:${slugify(selectedProject.industry)}`,
+        },
+        orderBy: { lastVerified: 'desc' },
+        take: 15,
+      })
+    : []
 
   const runQuestions = Array.isArray(activeRun?.questions)
     ? (activeRun?.questions as string[])
@@ -397,6 +418,49 @@ export default async function ResearchPage({
                 This run failed. Please retry with a new prompt or adjust inputs.
               </div>
             )}
+          </div>
+        )}
+      </section>
+
+      <section className="rounded-lg border bg-white p-6 shadow-sm space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">Source Library</h2>
+            <p className="text-sm text-gray-500">
+              {selectedProject
+                ? `Industry sources for ${selectedProject.industry}.`
+                : 'Select a project to view sources.'}
+            </p>
+          </div>
+          {selectedProject && (
+            <form action={refreshResearchSourcesAction}>
+              <input type="hidden" name="projectId" value={selectedProject.id} />
+              <button
+                type="submit"
+                className="rounded border border-blue-600 px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50"
+              >
+                Refresh Sources
+              </button>
+            </form>
+          )}
+        </div>
+
+        {!selectedProject && (
+          <p className="text-sm text-gray-500">No project selected.</p>
+        )}
+
+        {selectedProject && sourceLibrary.length === 0 && (
+          <p className="text-sm text-gray-500">No sources ingested yet.</p>
+        )}
+
+        {selectedProject && sourceLibrary.length > 0 && (
+          <div className="space-y-2 text-sm text-gray-700">
+            {sourceLibrary.map((entry) => (
+              <div key={entry.id} className="rounded border border-gray-100 px-3 py-2">
+                <div className="font-medium">{entry.claim}</div>
+                <div className="text-xs text-gray-500">{entry.source}</div>
+              </div>
+            ))}
           </div>
         )}
       </section>
