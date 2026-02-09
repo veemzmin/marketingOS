@@ -603,25 +603,11 @@
       "type": "n8n-nodes-base.rssFeedRead",
       "typeVersion": 1.1,
       "position": [
-        592,
-        208
-      ],
-      "parameters": {
-        "url": "={{ $json.queryUrl }}"
-      }
-    },
-    {
-      "id": "5f0d5b94-7a43-4f1c-9d5b-2c1b0d1b2f44",
-      "name": "Build Research Sources",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
         816,
-        208
+        120
       ],
       "parameters": {
-        "mode": "runOnceForAllItems",
-        "jsCode": "const payload = $node[\"Set Research Query\"].json;\nconst items = $input.all().slice(0, 12).map(item => ({\n  title: item.json.title,\n  url: item.json.link,\n  publisher: item.json.source || item.json.creator || 'Google News',\n  summary: item.json.contentSnippet || item.json.content || item.json.description || ''\n}));\nreturn [{ json: {\n  organizationId: payload.organizationId,\n  projectId: payload.projectId,\n  industry: payload.industry,\n  callbackUrl: payload.callbackUrl,\n  sources: items\n}}];"
+        "url": "={{ $json.feedUrl }}"
       }
     },
     {
@@ -630,8 +616,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1040,
-        208
+        1264,
+        120
       ],
       "parameters": {
         "url": "={{ $json.callbackUrl }}",
@@ -648,6 +634,34 @@
             }
           ]
         }
+      }
+    },
+    {
+      "id": "0f6d2e14-6b1a-4c2a-8e8f-44d4b8aa0d91",
+      "name": "Build Feed List",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        592,
+        120
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const payload = $node[\"Set Research Query\"].json;\nconst slug = (payload.industry || '').toLowerCase();\nconst baseFeeds = [\n  'https://news.google.com/rss/search?q=' + encodeURIComponent(payload.industry + ' marketing') + '&hl=en-US&gl=US&ceid=US:en',\n  'https://news.google.com/rss/search?q=' + encodeURIComponent(payload.industry + ' trends') + '&hl=en-US&gl=US&ceid=US:en',\n  'https://news.google.com/rss/search?q=' + encodeURIComponent(payload.industry + ' consumer behavior') + '&hl=en-US&gl=US&ceid=US:en'\n];\nconst feedMap = {\n  'mental-health-substance-abuse': [\n    'https://news.google.com/rss/search?q=mental%20health%20marketing&hl=en-US&gl=US&ceid=US:en',\n    'https://news.google.com/rss/search?q=behavioral%20health%20policy&hl=en-US&gl=US&ceid=US:en',\n    'https://news.google.com/rss/search?q=substance%20use%20treatment%20trends&hl=en-US&gl=US&ceid=US:en'\n  ],\n  'food-restaurant': [\n    'https://news.google.com/rss/search?q=restaurant%20industry%20trends&hl=en-US&gl=US&ceid=US:en',\n    'https://news.google.com/rss/search?q=food%20service%20marketing&hl=en-US&gl=US&ceid=US:en',\n    'https://news.google.com/rss/search?q=consumer%20dining%20behavior&hl=en-US&gl=US&ceid=US:en'\n  ],\n  'cannabis': [\n    'https://news.google.com/rss/search?q=cannabis%20marketing%20trends&hl=en-US&gl=US&ceid=US:en',\n    'https://news.google.com/rss/search?q=cannabis%20industry%20sales%20data&hl=en-US&gl=US&ceid=US:en',\n    'https://news.google.com/rss/search?q=cannabis%20regulation%20advertising&hl=en-US&gl=US&ceid=US:en'\n  ],\n  'healthcare': [\n    'https://news.google.com/rss/search?q=healthcare%20marketing%20trends&hl=en-US&gl=US&ceid=US:en',\n    'https://news.google.com/rss/search?q=patient%20engagement%20statistics&hl=en-US&gl=US&ceid=US:en',\n    'https://news.google.com/rss/search?q=telehealth%20market%20data&hl=en-US&gl=US&ceid=US:en'\n  ],\n  'graphic-design-marketing-advertising-agency': [\n    'https://news.google.com/rss/search?q=creative%20agency%20trends&hl=en-US&gl=US&ceid=US:en',\n    'https://news.google.com/rss/search?q=advertising%20industry%20spend%20data&hl=en-US&gl=US&ceid=US:en',\n    'https://news.google.com/rss/search?q=brand%20strategy%20case%20study&hl=en-US&gl=US&ceid=US:en'\n  ]\n};\nconst feeds = [...baseFeeds, ...(feedMap[slug] || [])];\nconst uniqueFeeds = Array.from(new Set(feeds));\nreturn uniqueFeeds.map(feedUrl => ({ json: { feedUrl, payload } }));"
+      }
+    },
+    {
+      "id": "5f0d5b94-7a43-4f1c-9d5b-2c1b0d1b2f44",
+      "name": "Normalize Research Sources",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        120
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const payload = $input.first().json.payload || $node[\"Set Research Query\"].json;\nconst items = $input.all().map(item => ({\n  title: item.json.title,\n  url: item.json.link,\n  publisher: item.json.source || item.json.creator || 'Google News',\n  summary: item.json.contentSnippet || item.json.content || item.json.description || ''\n}));\nconst seen = new Set();\nconst unique = [];\nfor (const item of items) {\n  const key = (item.title || item.url || '').toLowerCase();\n  if (!key || seen.has(key)) continue;\n  seen.add(key);\n  unique.push(item);\n}\nreturn [{ json: {\n  organizationId: payload.organizationId,\n  projectId: payload.projectId,\n  industry: payload.industry,\n  callbackUrl: payload.callbackUrl,\n  sources: unique.slice(0, 25)\n}}];"
       }
     }
   ],
@@ -889,7 +903,7 @@
       "main": [
         [
           {
-            "node": "Read Research RSS",
+            "node": "Build Feed List",
             "type": "main",
             "index": 0
           }
@@ -900,14 +914,25 @@
       "main": [
         [
           {
-            "node": "Build Research Sources",
+            "node": "Normalize Research Sources",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Build Research Sources": {
+    "Build Feed List": {
+      "main": [
+        [
+          {
+            "node": "Read Research RSS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Research Sources": {
       "main": [
         [
           {
