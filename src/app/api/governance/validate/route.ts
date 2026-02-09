@@ -6,15 +6,19 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { validateContent } from '@/lib/governance/validators/composite'
+import { validateContentWithContext } from '@/lib/governance/engine'
 import { calculateComplianceScore } from '@/lib/governance/scoring/calculator'
-import { auth } from '@/auth'
-import { prisma } from '@/lib/db/client'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { content, contentId } = body as { content?: string; contentId?: string }
+    const { content, contentId, campaignId, profileId, clientId } = body as {
+      content?: string
+      contentId?: string
+      campaignId?: string
+      profileId?: string
+      clientId?: string
+    }
 
     // Validate request
     if (!content || typeof content !== 'string') {
@@ -25,7 +29,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Run validation
-    const violations = await validateContent(content)
+    const { violations, profileId: resolvedProfileId, campaignId: resolvedCampaignId, clientId: resolvedClientId } =
+      await validateContentWithContext(content, { campaignId, profileId, clientId })
     const complianceScore = calculateComplianceScore(violations)
 
     // TODO: Re-enable authentication and audit logging after Phase 2 testing
@@ -50,6 +55,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       complianceScore: complianceScore.score,
+      context: {
+        profileId: resolvedProfileId,
+        campaignId: resolvedCampaignId,
+        clientId: resolvedClientId,
+      },
       violations: violations.map(v => ({
         policyId: v.policyId,
         severity: v.severity,

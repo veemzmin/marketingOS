@@ -94,7 +94,7 @@ export default function SecuritySettingsPage() {
               </div>
             )}
 
-            {setupState === "qr" && (
+            {(setupState === "qr" || setupState === "verifying") && (
               <div className="mt-6 space-y-6">
                 <div>
                   <h3 className="text-lg font-medium text-gray-900">Step 1: Scan QR Code</h3>

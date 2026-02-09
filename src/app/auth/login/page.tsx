@@ -4,6 +4,9 @@ import { loginAction } from "@/app/actions/auth"
 import { useFormState } from "react-dom"
 import { useFormStatus } from "react-dom"
 import { useSearchParams } from "next/navigation"
+import { Suspense } from "react"
+
+export const dynamic = "force-dynamic"
 
 function SubmitButton() {
   const { pending } = useFormStatus()
@@ -20,6 +23,14 @@ function SubmitButton() {
 }
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50" />}>
+      <LoginForm />
+    </Suspense>
+  )
+}
+
+function LoginForm() {
   const [state, formAction] = useFormState(loginAction, undefined)
   const searchParams = useSearchParams()
   const verified = searchParams.get("verified") === "true"

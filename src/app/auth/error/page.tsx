@@ -1,8 +1,19 @@
 "use client"
 
 import { useSearchParams } from "next/navigation"
+import { Suspense } from "react"
+
+export const dynamic = "force-dynamic"
 
 export default function AuthErrorPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50" />}>
+      <AuthErrorContent />
+    </Suspense>
+  )
+}
+
+function AuthErrorContent() {
   const searchParams = useSearchParams()
   const error = searchParams.get("error")
 

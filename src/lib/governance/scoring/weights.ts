@@ -20,31 +20,49 @@ export const POLICY_WEIGHTS = {
     penalty: 25,
     description: 'Unsupported medical claim',
     maxPenalty: 25, // Single violation counts once
+    mode: 'single',
   },
   'suicide-safety': {
     penalty: 30,
     description: 'Suicide discussion without crisis resources',
     maxPenalty: 30, // Highest penalty - safety critical
+    mode: 'single',
   },
   'treatment-qualification': {
     penalty: 20,
     description: 'Unqualified treatment advice',
     maxPenalty: 20,
+    mode: 'single',
   },
   'dsm5-terminology': {
     penalty: 15,
     description: 'Invalid DSM-5 terminology',
     maxPenalty: 15,
+    mode: 'single',
   },
   'consent': {
     penalty: 10,
     description: 'Missing patient testimonial consent',
     maxPenalty: 10,
+    mode: 'single',
   },
   'stigma-language': {
     penalty: 5,
     description: 'Stigmatizing language',
     maxPenalty: 30, // Each term = -5 points, cap at 6 terms (30 points)
+    mode: 'additive',
+  },
+  'custom-patterns': {
+    penalty: 8,
+    description: 'Custom forbidden pattern',
+    maxPenalty: 32,
+    mode: 'additive',
+  },
+  'required-phrases': {
+    penalty: 10,
+    description: 'Missing required framing',
+    maxPenalty: 30,
+    mode: 'additive',
   },
 } as const
 

@@ -27,7 +27,11 @@ model Organization {
   // Relationships
   userOrganizations UserOrganization[]
   auditLogs         AuditLog[]
+  clients           Client[]
   content           Content[]
+  generationJobs    GenerationJob[]
+  knowledgeEntries  KnowledgeEntry[]
+  assets            Asset[]
 
   @@map("organizations")
 }
@@ -50,9 +54,11 @@ model User {
   emailVerificationTokens EmailVerificationToken[]
   totpSetups              TotpSetup[]
   auditLogs               AuditLog[]
-  contentCreated          Content[]        @relation("ContentCreator")
-  contentVersions         ContentVersion[] @relation("VersionCreator")
-  reviewDecisions         ReviewDecision[] @relation("Reviewer")
+  contentCreated          Content[]           @relation("ContentCreator")
+  contentVersions         ContentVersion[]    @relation("VersionCreator")
+  reviewDecisions         ReviewDecision[]    @relation("Reviewer")
+  reviewAssignments       ReviewAssignment[]  @relation("ReviewAssignments")
+  reviewerTypes           UserReviewerType[]
 
   @@map("users")
 }
@@ -83,6 +89,38 @@ enum Role {
   REVIEWER // Can review and approve content
   CREATOR // Can create and submit content for review
   VIEWER // Read-only access to content
+}
+
+/// ReviewerType - Types of reviewers for multi-reviewer workflow
+enum ReviewerType {
+  CLINICAL // Reviews for medical accuracy and safety
+  MARKETING // Reviews for brand alignment and messaging
+}
+
+/// GenerationJobType - Types of AI generation jobs
+enum GenerationJobType {
+  TEXT_BLOG // Blog post generation
+  TEXT_SOCIAL // Social media post generation
+  IMAGE // Image generation
+  VIDEO // Video generation
+}
+
+/// GenerationJobStatus - Status of generation jobs
+enum GenerationJobStatus {
+  PENDING // Created, not yet sent to n8n
+  DISPATCHED // Sent to n8n, awaiting callback
+  PROCESSING // n8n confirmed processing
+  COMPLETED // Result received
+  FAILED // Error occurred
+}
+
+/// CampaignStatus - Lifecycle for marketing campaigns
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  ARCHIVED
 }
 
 /// ContentStatus - Content workflow states
@@ -155,6 +193,89 @@ model AuditLog {
 }
 
 // ============================================================================
+// CLIENT + GOVERNANCE HIERARCHY MODELS
+// ============================================================================
+
+/// Client - Brand/account within an organization
+model Client {
+  id               String   @id @default(cuid())
+  organizationId   String
+  slug             String
+  name             String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relationships
+  organization       Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  truthPack          TruthPack?
+  governanceProfiles GovernanceProfile[]
+  campaigns          Campaign[]
+  content            Content[]
+
+  @@unique([organizationId, slug])
+  @@index([organizationId])
+  @@map("clients")
+}
+
+/// TruthPack - Source of truth for a client (brand, voice, compliance rules)
+model TruthPack {
+  id        String   @id @default(cuid())
+  clientId  String   @unique
+  version   Int      @default(1)
+  data      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@map("truth_packs")
+}
+
+/// GovernanceProfile - Reusable policy ruleset for a client
+model GovernanceProfile {
+  id          String   @id @default(cuid())
+  clientId    String
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  config      Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  client    Client     @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  campaigns Campaign[]
+
+  @@index([clientId])
+  @@map("governance_profiles")
+}
+
+/// Campaign - Time-bound initiative inheriting governance profile
+model Campaign {
+  id                  String         @id @default(cuid())
+  clientId            String
+  governanceProfileId String
+  name                String
+  status              CampaignStatus @default(DRAFT)
+  config              Json
+  startsAt            DateTime?
+  endsAt              DateTime?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  // Relationships
+  client            Client            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  governanceProfile GovernanceProfile @relation(fields: [governanceProfileId], references: [id], onDelete: Restrict)
+  content           Content[]
+
+  @@index([clientId])
+  @@index([governanceProfileId])
+  @@map("campaigns")
+}
+
+// ============================================================================
 // CONTENT CREATION MODELS
 // ============================================================================
 
@@ -163,6 +284,8 @@ model AuditLog {
 model Content {
   id               String        @id @default(cuid())
   organizationId   String
+  clientId         String?
+  campaignId       String?
   title            String
   status           ContentStatus @default(DRAFT)
   complianceScore  Int? // Latest compliance score from governance engine
@@ -171,12 +294,21 @@ model Content {
   updatedAt        DateTime      @updatedAt
 
   // Relationships
-  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  createdBy      User            @relation("ContentCreator", fields: [createdByUserId], references: [id], onDelete: Cascade)
-  versions       ContentVersion[]
-  reviewDecision ReviewDecision?
+  organization      Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client            Client?             @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  campaign          Campaign?           @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  createdBy         User               @relation("ContentCreator", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  versions          ContentVersion[]
+  reviewAssignments ReviewAssignment[]
+  reviewDecisions   ReviewDecision[]
+  generationJobs    GenerationJob[]
+  blogMetadata      BlogMetadata?
+  socialMetadata    SocialMetadata?
+  assets            Asset[]
 
   @@index([organizationId])
+  @@index([clientId])
+  @@index([campaignId])
   @@index([status])
   @@index([createdByUserId])
   @@map("content")
@@ -208,20 +340,172 @@ model ContentVersion {
 }
 
 /// ReviewDecision - Review outcome for content approval workflow
-/// Stores reviewer decisions with optional rejection reasons
+/// Stores reviewer decisions with optional comments
+/// Supports multi-reviewer workflow with different reviewer types
 model ReviewDecision {
-  id               String   @id @default(cuid())
-  contentId        String   @unique
-  decision         String // APPROVED or REJECTED
+  id               String       @id @default(cuid())
+  contentId        String
+  reviewerType     ReviewerType
+  decision         String // APPROVED, REJECTED, CHANGES_REQUESTED
   reviewedByUserId String
-  reason           String? // Optional rejection reason
-  createdAt        DateTime @default(now())
+  comment          String?      @db.Text
+  createdAt        DateTime     @default(now())
 
   // Relationships
   content    Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
   reviewedBy User    @relation("Reviewer", fields: [reviewedByUserId], references: [id], onDelete: Cascade)
 
+  @@unique([contentId, reviewerType]) // One decision per type per content
   @@index([contentId])
   @@index([reviewedByUserId])
   @@map("review_decisions")
+}
+
+/// ReviewAssignment - Tracks review assignments for multi-reviewer workflow
+/// Each content item can have multiple assignments (one per required reviewer type)
+/// Assignments can be claimed by any reviewer of the appropriate type
+model ReviewAssignment {
+  id             String       @id @default(cuid())
+  contentId      String
+  reviewerType   ReviewerType
+  assignedUserId String? // Null = any reviewer of this type can claim
+  status         String       @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  // Relationships
+  content      Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  assignedUser User?   @relation("ReviewAssignments", fields: [assignedUserId], references: [id])
+
+  @@unique([contentId, reviewerType])
+  @@index([contentId])
+  @@index([assignedUserId])
+  @@index([status])
+  @@map("review_assignments")
+}
+
+/// UserReviewerType - Maps users to reviewer types they can perform
+/// Allows users to be designated as clinical reviewers, marketing reviewers, or both
+model UserReviewerType {
+  id             String       @id @default(cuid())
+  userId         String
+  organizationId String
+  reviewerType   ReviewerType
+  createdAt      DateTime     @default(now())
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId, reviewerType])
+  @@index([organizationId, reviewerType])
+  @@map("user_reviewer_types")
+}
+
+// ============================================================================
+// AI GENERATION MODELS
+// ============================================================================
+
+/// GenerationJob - AI generation job tracking for n8n integration
+/// Tracks text, image, and video generation requests through n8n
+model GenerationJob {
+  id             String              @id @default(cuid())
+  organizationId String
+  contentId      String? // Null for standalone generations
+  jobType        GenerationJobType
+  status         GenerationJobStatus @default(PENDING)
+  prompt         String              @db.Text
+  parameters     Json // Platform, style, etc.
+  result         Json? // Generated content/URLs
+  error          String?
+  n8nExecutionId String? // For tracking in n8n
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  completedAt    DateTime?
+
+  // Relationships
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  content      Content?     @relation(fields: [contentId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([contentId])
+  @@index([status])
+  @@index([n8nExecutionId])
+  @@map("generation_jobs")
+}
+
+/// KnowledgeEntry - Verified health information for RAG
+/// Stores curated facts that AI can reference during generation
+model KnowledgeEntry {
+  id             String   @id @default(cuid())
+  organizationId String
+  category       String // condition, treatment, statistic, etc.
+  claim          String   @db.Text
+  source         String
+  lastVerified   DateTime
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relationships
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, category])
+  @@map("knowledge_entries")
+}
+
+/// BlogMetadata - SEO and blog-specific metadata
+model BlogMetadata {
+  id                 String   @id @default(cuid())
+  contentId          String   @unique
+  metaDescription    String?
+  primaryKeyword     String?
+  secondaryKeywords  String[] // PostgreSQL array
+  seoScore           Int?
+  readabilityScore   Int?
+  wordCount          Int?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  // Relationships
+  content Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@map("blog_metadata")
+}
+
+/// SocialMetadata - Social media platform-specific metadata
+model SocialMetadata {
+  id               String   @id @default(cuid())
+  contentId        String   @unique
+  platform         String // instagram, facebook, linkedin, twitter
+  hashtags         String[] // PostgreSQL array
+  suggestedTime    Json? // { day, time, timezone }
+  characterCount   Int?
+  engagementScore  Int? // Predicted engagement (future feature)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relationships
+  content Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@map("social_metadata")
+}
+
+/// Asset - Generated or uploaded media assets (images, videos)
+model Asset {
+  id             String   @id @default(cuid())
+  organizationId String
+  contentId      String?
+  type           String // image, video, audio
+  url            String
+  thumbnailUrl   String?
+  metadata       Json // width, height, duration, format, size, etc.
+  createdAt      DateTime @default(now())
+
+  // Relationships
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  content      Content?     @relation(fields: [contentId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([contentId])
+  @@index([type])
+  @@map("assets")
 }

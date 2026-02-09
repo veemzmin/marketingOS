@@ -15,8 +15,8 @@ import { POLICY_WEIGHTS, PolicyId } from './weights'
  * 1. Start with perfect score (100)
  * 2. Group violations by policy ID
  * 3. Apply weighted penalty for each policy:
- *    - Stigma: additive (5pts/term, max 30pts)
- *    - Others: single penalty regardless of count
+ *    - Additive policies: penalty * count (capped by maxPenalty)
+ *    - Single policies: single penalty regardless of count
  * 4. Subtract total penalties from 100
  * 5. Clamp result to [0, 100]
  *
@@ -56,13 +56,11 @@ export function calculateComplianceScore(violations: Violation[]): ComplianceSco
     const count = violationSet.length
     let penalty = 0
 
-    if (policyId === 'stigma-language') {
-      // Stigma terms are additive: each violation -5 points, max -30 (6 terms)
+    if (weight.mode === 'additive') {
       penalty = Math.min(count * weight.penalty, weight.maxPenalty)
       const plural = count > 1 ? 's' : ''
-      reasoning.push(`${weight.description} (${count} term${plural}): -${penalty} points`)
+      reasoning.push(`${weight.description} (${count} item${plural}): -${penalty} points`)
     } else {
-      // Other policies: single violation counts once
       penalty = weight.penalty
       reasoning.push(`${weight.description}: -${penalty} points`)
     }

@@ -11,6 +11,9 @@ interface Violation {
 
 export default function GovernanceTestPage() {
   const [content, setContent] = useState('')
+  const [clientId, setClientId] = useState('')
+  const [profileId, setProfileId] = useState('')
+  const [campaignId, setCampaignId] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<{
     complianceScore: number
@@ -25,7 +28,12 @@ export default function GovernanceTestPage() {
       const res = await fetch('/api/governance/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({
+          content,
+          clientId: clientId || undefined,
+          profileId: profileId || undefined,
+          campaignId: campaignId || undefined,
+        }),
       })
       const data = await res.json()
       setResult(data)
@@ -43,6 +51,41 @@ export default function GovernanceTestPage() {
       <div className="grid grid-cols-2 gap-8">
         {/* Left: Input */}
         <div>
+          <div className="mb-4 grid grid-cols-3 gap-3">
+            <div>
+              <label className="block mb-1 text-sm font-medium">
+                Client ID (optional)
+              </label>
+              <input
+                value={clientId}
+                onChange={(e) => setClientId(e.target.value)}
+                className="w-full rounded border px-3 py-2 text-sm"
+                placeholder="clientId"
+              />
+            </div>
+            <div>
+              <label className="block mb-1 text-sm font-medium">
+                Profile ID (optional)
+              </label>
+              <input
+                value={profileId}
+                onChange={(e) => setProfileId(e.target.value)}
+                className="w-full rounded border px-3 py-2 text-sm"
+                placeholder="profileId"
+              />
+            </div>
+            <div>
+              <label className="block mb-1 text-sm font-medium">
+                Campaign ID (optional)
+              </label>
+              <input
+                value={campaignId}
+                onChange={(e) => setCampaignId(e.target.value)}
+                className="w-full rounded border px-3 py-2 text-sm"
+                placeholder="campaignId"
+              />
+            </div>
+          </div>
           <label className="block mb-2 font-medium">
             Content to Validate
           </label>
