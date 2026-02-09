@@ -21,7 +21,6 @@ const payload = {
   nodes: workflow.nodes,
   connections: workflow.connections,
   settings: workflow.settings || {},
-  active: Boolean(workflow.active),
   tags: workflow.tags || [],
 }
 
