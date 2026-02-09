@@ -65,6 +65,9 @@ export async function submitForReview(
 
     // Determine required reviewer types
     const latestVersion = content.versions[0];
+    if (!latestVersion) {
+      return { success: false, error: "Content has no versions to review" };
+    }
     const requiredReviewers = getRequiredReviewers(latestVersion?.topic);
 
     // Create review assignments
@@ -74,6 +77,7 @@ export async function submitForReview(
         await tx.reviewAssignment.create({
           data: {
             contentId,
+            contentVersionId: latestVersion.id,
             reviewerType,
             status: "PENDING",
           },
