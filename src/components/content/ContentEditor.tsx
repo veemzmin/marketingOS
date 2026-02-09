@@ -5,7 +5,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { contentFormSchema, type ContentFormData } from '@/lib/validators/content-schema'
 import { GovernanceFeedback } from './GovernanceFeedback'
 import { SaveStatus } from './SaveStatus'
-import { saveDraftAction, validateGovernanceAction, submitContentAction } from '@/lib/actions/content'
+import { saveDraftAction, validateGovernanceAction } from '@/lib/actions/content'
+import { submitForReview } from '@/lib/actions/review'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Violation } from '@/lib/governance/types'
@@ -118,8 +119,13 @@ export function ContentEditor({ initialContent }: ContentEditorProps) {
       return
     }
 
+    if (complianceScore === null || complianceScore < 70) {
+      alert('Content must have a compliance score of at least 70 to submit for review')
+      return
+    }
+
     setIsSubmitting(true)
-    const result = await submitContentAction({ contentId })
+    const result = await submitForReview(contentId)
     setIsSubmitting(false)
 
     if (result.success) {
@@ -252,11 +258,16 @@ export function ContentEditor({ initialContent }: ContentEditorProps) {
       <div className="flex gap-4">
         <button
           type="submit"
-          disabled={violations.length > 0 || isSubmitting}
+          disabled={violations.length > 0 || isSubmitting || (complianceScore !== null && complianceScore < 70)}
           className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
           {isSubmitting ? 'Submitting...' : 'Submit for Review'}
         </button>
+        {complianceScore !== null && complianceScore < 70 && (
+          <p className="text-sm text-red-600 self-center">
+            Compliance score must be at least 70 to submit for review
+          </p>
+        )}
       </div>
     </form>
   )

@@ -74,7 +74,7 @@ export const prisma = basePrisma.$extends({
           const action = operation.replace("Many", "") // "createMany" -> "create"
 
           // Capture changes for update operations
-          let changes = null
+          let changes: Record<string, any> | undefined
           if (operation === "update" || operation === "updateMany") {
             changes = {
               data: args.data,
@@ -89,11 +89,11 @@ export const prisma = basePrisma.$extends({
           await basePrisma.auditLog.create({
             data: {
               organizationId: tenantId,
-              userId: userId || null,
+              userId: userId || undefined,
               action,
               resource: model || "unknown",
-              resourceId,
-              changes,
+              resourceId: resourceId || undefined,
+              changes: changes || undefined,
               metadata: {
                 operation,
                 timestamp: new Date().toISOString(),

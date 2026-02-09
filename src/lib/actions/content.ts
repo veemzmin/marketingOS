@@ -3,7 +3,7 @@
 import { auth } from '@/auth'
 import { prisma } from '@/lib/db/client'
 import { headers } from 'next/headers'
-import { validateContent } from '@/lib/governance/validators/composite'
+import { validateContentWithContext } from '@/lib/governance/engine'
 import { calculateComplianceScore } from '@/lib/governance/scoring/calculator'
 import { contentFormSchema, type ContentFormData } from '@/lib/validators/content-schema'
 import { canTransitionTo } from '@/lib/content/types'
@@ -45,7 +45,7 @@ export async function saveDraftAction({
   const { title, body, topic, audience, tone } = parsed.data
 
   // Run governance validation
-  const violations = await validateContent(body)
+  const { violations } = await validateContentWithContext(body)
   const { score } = calculateComplianceScore(violations)
 
   try {
@@ -129,9 +129,12 @@ export async function saveDraftAction({
   }
 }
 
-export async function validateGovernanceAction(content: string) {
+export async function validateGovernanceAction(
+  content: string,
+  context?: { campaignId?: string; profileId?: string; clientId?: string }
+) {
   // Wrapper for real-time UI validation (no auth required for read-only validation)
-  const violations = await validateContent(content)
+  const { violations } = await validateContentWithContext(content, context)
   const { score } = calculateComplianceScore(violations)
 
   return { violations, complianceScore: score }

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/client"
 import { auth } from "@/auth"
 
+export const dynamic = "force-dynamic"
+
 /**
  * CSV Export Endpoint for Audit Logs
  *

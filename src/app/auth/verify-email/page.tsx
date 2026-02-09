@@ -3,8 +3,19 @@
 import { useEffect, useState } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { verifyEmailAction, resendVerificationAction } from "@/app/actions/auth"
+import { Suspense } from "react"
+
+export const dynamic = "force-dynamic"
 
 export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50" />}>
+      <VerifyEmailContent />
+    </Suspense>
+  )
+}
+
+function VerifyEmailContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const token = searchParams.get("token")
