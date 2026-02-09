@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
-import { ReviewerType } from "@/lib/db/types";
+import { ReviewerType, ContentStatus } from "@/lib/db/types";
 import { logger } from "@/lib/logger";
 import {
   notifyReviewersOfNewContent,
@@ -83,6 +83,15 @@ export async function submitForReview(
           },
         });
       }
+
+      await tx.contentVersion.update({
+        where: { id: latestVersion.id },
+        data: {
+          submittedAt: new Date(),
+          submittedByUserId: user.id,
+          submittedFromStatus: content.status as ContentStatus,
+        },
+      });
 
       // Update content status
       await tx.content.update({
