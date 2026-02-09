@@ -5,13 +5,13 @@
     "prettier"
   ],
   "rules": {
-    "no-console": "off",
-    "react/no-unescaped-entities": "off",
-    "prefer-const": "off",
-    "@typescript-eslint/no-empty-object-type": "off",
-    "@typescript-eslint/no-explicit-any": "off",
+    "no-console": "warn",
+    "react/no-unescaped-entities": "warn",
+    "prefer-const": "warn",
+    "@typescript-eslint/no-empty-object-type": "warn",
+    "@typescript-eslint/no-explicit-any": "warn",
     "@typescript-eslint/no-unused-vars": [
-      "off",
+      "warn",
       {
         "argsIgnorePattern": "^_",
         "varsIgnorePattern": "^_"
