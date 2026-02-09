@@ -1,8 +1,7 @@
-import { requireAdmin, getCurrentUserRole } from "@/lib/auth/permissions"
+import { requireAdmin } from "@/lib/auth/permissions"
 import { prisma } from "@/lib/db/client"
 import { headers } from "next/headers"
 import Link from "next/link"
-import { Role } from "../../../../generated/prisma/client"
 import { RoleChangeDropdown } from "./role-change-dropdown"
 
 export default async function AdminUsersPage() {

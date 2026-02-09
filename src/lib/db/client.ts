@@ -1,5 +1,6 @@
-import { PrismaClient } from "../../../generated/prisma/client"
+import { PrismaClient, Prisma } from "../../../generated/prisma/client"
 import { headers } from "next/headers"
+import { logger } from "@/lib/logger"
 
 const globalForPrisma = global as unknown as { prisma: PrismaClient }
 
@@ -74,7 +75,7 @@ export const prisma = basePrisma.$extends({
           const action = operation.replace("Many", "") // "createMany" -> "create"
 
           // Capture changes for update operations
-          let changes: Record<string, any> | undefined
+          let changes: Prisma.InputJsonValue | undefined
           if (operation === "update" || operation === "updateMany") {
             changes = {
               data: args.data,
@@ -102,7 +103,7 @@ export const prisma = basePrisma.$extends({
           })
         } catch (error) {
           // Non-blocking error handling - log error but don't fail the operation
-          console.error("Audit logging failed:", error)
+          logger.error("Audit logging failed:", error)
         }
       }
 

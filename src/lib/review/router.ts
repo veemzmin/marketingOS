@@ -1,4 +1,5 @@
 import { ReviewerType } from "@/lib/db/types";
+import { logger } from "@/lib/logger";
 import { db } from "@/lib/db";
 
 /**
@@ -54,7 +55,7 @@ export async function canApprove(contentId: string): Promise<boolean> {
 
     return true;
   } catch (error) {
-    console.error("Error checking if content can be approved:", error);
+    logger.error("Error checking if content can be approved:", error);
     return false;
   }
 }
@@ -73,7 +74,7 @@ export async function hasRejection(contentId: string): Promise<boolean> {
 
     return decisions.length > 0;
   } catch (error) {
-    console.error("Error checking for rejections:", error);
+    logger.error("Error checking for rejections:", error);
     return false;
   }
 }
@@ -92,7 +93,7 @@ export async function hasChangesRequested(contentId: string): Promise<boolean> {
 
     return decisions.length > 0;
   } catch (error) {
-    console.error("Error checking for change requests:", error);
+    logger.error("Error checking for change requests:", error);
     return false;
   }
 }

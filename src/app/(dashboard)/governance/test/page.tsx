@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { logger } from '@/lib/logger'
 
 interface Violation {
   policyId: string
@@ -38,7 +39,7 @@ export default function GovernanceTestPage() {
       const data = await res.json()
       setResult(data)
     } catch (error) {
-      console.error('Validation failed:', error)
+      logger.error('Validation failed:', error)
     } finally {
       setLoading(false)
     }
@@ -148,7 +149,7 @@ export default function GovernanceTestPage() {
                           {v.policyId} ({v.severity})
                         </p>
                         <p className="text-sm text-gray-700 mt-1 italic">
-                          "{v.text}"
+                          &quot;{v.text}&quot;
                         </p>
                         <p className="text-sm text-gray-600 mt-2">
                           {v.explanation}

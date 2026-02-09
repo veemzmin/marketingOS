@@ -7,8 +7,8 @@ export interface AuditLogEntry {
   action: string
   resource: string
   resourceId?: string | null
-  changes?: Record<string, any> | null
-  metadata?: Record<string, any> | null
+  changes?: Record<string, unknown> | null
+  metadata?: Record<string, unknown> | null
 }
 
 /**
@@ -56,7 +56,7 @@ export async function logRoleChange(
   oldRole: string,
   newRole: string,
   performedById: string,
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 ): Promise<void> {
   const headersList = await headers()
   const tenantId = headersList.get("x-tenant-id")
@@ -94,7 +94,7 @@ export async function logUserInvitation(
   invitedEmail: string,
   assignedRole: string,
   performedById: string,
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 ): Promise<void> {
   const headersList = await headers()
   const tenantId = headersList.get("x-tenant-id")

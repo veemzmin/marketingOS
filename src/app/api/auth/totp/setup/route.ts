@@ -3,8 +3,9 @@ import { auth } from "@/auth"
 import { prisma } from "@/lib/db/client"
 import speakeasy from "speakeasy"
 import qrcode from "qrcode"
+import { logger } from "@/lib/logger"
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     // Check authentication
     const session = await auth()
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
       qrCode: qrCodeDataUrl,
     })
   } catch (error) {
-    console.error("TOTP setup error:", error)
+    logger.error("TOTP setup error:", error)
     return NextResponse.json(
       { error: "Failed to setup 2FA" },
       { status: 500 }

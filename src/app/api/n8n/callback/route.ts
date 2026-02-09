@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { logAudit } from "@/lib/audit";
+import { logger } from "@/lib/logger";
 
 const N8N_CALLBACK_SECRET = process.env.N8N_CALLBACK_SECRET;
 
@@ -53,7 +54,7 @@ export async function POST(req: NextRequest) {
         if (job.jobType === "TEXT_BLOG" || job.jobType === "TEXT_SOCIAL") {
           // You might want to create a new version or update draft
           // For now, we'll just log it
-          console.log(
+          logger.info(
             `Job ${jobId} completed for content ${job.contentId}:`,
             result
           );
@@ -120,7 +121,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
   } catch (error) {
-    console.error("Error processing n8n callback:", error);
+    logger.error("Error processing n8n callback:", error);
     return NextResponse.json(
       {
         error: "Internal server error",
