@@ -59,6 +59,7 @@ model User {
   reviewDecisions         ReviewDecision[]    @relation("Reviewer")
   reviewAssignments       ReviewAssignment[]  @relation("ReviewAssignments")
   reviewerTypes           UserReviewerType[]
+  contentVersionsSubmitted ContentVersion[]   @relation("VersionSubmitter")
 
   @@map("users")
 }
@@ -327,17 +328,22 @@ model ContentVersion {
   tone            String // informative, supportive, clinical, motivational
   complianceScore Int // Score at time of version creation
   governanceViolations Json? // Stored violations for audit/review
+  submittedByUserId String?
+  submittedAt       DateTime?
+  submittedFromStatus ContentStatus?
   createdByUserId String
   createdAt       DateTime @default(now())
 
   // Relationships
   content   Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
   createdBy User    @relation("VersionCreator", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  submittedBy User? @relation("VersionSubmitter", fields: [submittedByUserId], references: [id], onDelete: SetNull)
   reviewAssignments ReviewAssignment[]
 
   @@unique([contentId, versionNumber])
   @@index([contentId])
   @@index([createdByUserId])
+  @@index([submittedByUserId])
   @@map("content_versions")
 }
 
