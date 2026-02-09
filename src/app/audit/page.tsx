@@ -9,7 +9,15 @@ import { headers } from "next/headers"
  * Displays recent audit events for the current organization.
  * Admin-only access. Provides CSV export functionality.
  */
-export default async function AuditPage() {
+export default async function AuditPage({
+  searchParams,
+}: {
+  searchParams?: {
+    resource?: string
+    resourceId?: string
+    action?: string
+  }
+}) {
   const session = await auth()
 
   if (!session) {
@@ -46,10 +54,17 @@ export default async function AuditPage() {
     )
   }
 
+  const resource = searchParams?.resource
+  const resourceId = searchParams?.resourceId
+  const action = searchParams?.action
+
   // Fetch recent audit logs (last 100)
   const logs = await prisma.auditLog.findMany({
     where: {
       organizationId: tenantId,
+      ...(resource ? { resource } : {}),
+      ...(resourceId ? { resourceId } : {}),
+      ...(action ? { action } : {}),
     },
     include: {
       user: {
@@ -81,6 +96,11 @@ export default async function AuditPage() {
 
           <div className="mb-4 text-sm text-gray-600">
             Showing most recent {logs.length} events
+            {(resource || resourceId || action) && (
+              <span className="ml-2 text-gray-500">
+                (filtered)
+              </span>
+            )}
           </div>
 
           {logs.length === 0 ? (
