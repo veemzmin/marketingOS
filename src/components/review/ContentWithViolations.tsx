@@ -56,7 +56,7 @@ export function ContentWithViolations({
               <div className="text-xs mt-1">{violation.message}</div>
               {violation.matchedText && (
                 <div className="text-xs mt-1 italic">
-                  "{violation.matchedText}"
+                  &quot;{violation.matchedText}&quot;
                 </div>
               )}
             </div>

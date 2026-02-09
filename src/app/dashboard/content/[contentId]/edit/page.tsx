@@ -3,7 +3,7 @@ import { getContentAction } from '@/lib/actions/content'
 import { redirect } from 'next/navigation'
 
 export default async function EditContentPage({ params }: { params: { contentId: string } }) {
-  const { success, content, error } = await getContentAction({ contentId: params.contentId })
+  const { success, content } = await getContentAction({ contentId: params.contentId })
 
   if (!success || !content) {
     redirect('/dashboard/content/list')

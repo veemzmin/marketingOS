@@ -6,8 +6,9 @@ import { headers } from 'next/headers'
 import { validateContentWithContext } from '@/lib/governance/engine'
 import { calculateComplianceScore } from '@/lib/governance/scoring/calculator'
 import { contentFormSchema, type ContentFormData } from '@/lib/validators/content-schema'
-import { canTransitionTo } from '@/lib/content/types'
+import { canTransitionTo, type ContentStatus } from '@/lib/content/types'
 import { shouldCreateVersion } from '@/lib/content/helpers'
+import { logger } from '@/lib/logger'
 
 export async function saveDraftAction({
   contentId,
@@ -124,9 +125,15 @@ export async function saveDraftAction({
       return { success: true, contentId, complianceScore: score }
     }
   } catch (error) {
-    console.error('Save draft failed:', error)
+    logger.error('Save draft failed:', error)
     return { success: false, error: 'Failed to save draft' }
   }
+}
+
+const CONTENT_STATUSES: ContentStatus[] = ['DRAFT', 'SUBMITTED', 'IN_REVIEW', 'APPROVED', 'REJECTED']
+
+function isContentStatus(value: string): value is ContentStatus {
+  return CONTENT_STATUSES.includes(value as ContentStatus)
 }
 
 export async function validateGovernanceAction(
@@ -170,7 +177,8 @@ export async function submitContentAction({ contentId }: { contentId: string }) 
   }
 
   // Validate status transition
-  if (!canTransitionTo(content.status as any, 'SUBMITTED')) {
+  const currentStatus = content.status as ContentStatus
+  if (!canTransitionTo(currentStatus, 'SUBMITTED')) {
     return { success: false, error: `Cannot submit content in ${content.status} status` }
   }
 
@@ -204,10 +212,12 @@ export async function listContentAction({ status }: { status?: string } = {}) {
     organizationId = userOrg.organizationId
   }
 
+  const statusFilter = status && isContentStatus(status) ? status : undefined
+
   const contents = await prisma.content.findMany({
     where: {
       organizationId,
-      ...(status ? { status: status as any } : {}),
+      ...(statusFilter ? { status: statusFilter } : {}),
     },
     orderBy: { updatedAt: 'desc' },
     include: {

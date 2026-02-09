@@ -6,6 +6,7 @@ import { validateDSM5Terminology } from "./validators/dsm5-terminology"
 import { validateTreatmentQualification } from "./validators/treatment-qualification"
 import { validateSuicideSafety } from "./validators/suicide-safety"
 import { validateConsentRequirement } from "./validators/consent-requirements"
+import { logger } from "@/lib/logger"
 
 export interface CustomPattern {
   id: string
@@ -89,7 +90,7 @@ function validateCustomPatterns(
     try {
       regex = new RegExp(pattern.pattern, pattern.flags || "gi")
     } catch (error) {
-      console.warn(`Invalid custom pattern regex: ${pattern.id}`, error)
+      logger.warn(`Invalid custom pattern regex: ${pattern.id}`, error)
       continue
     }
 

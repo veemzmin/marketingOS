@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
 import { ReviewerType } from "@/lib/db/types";
+import { logger } from "@/lib/logger";
 import {
   notifyReviewersOfNewContent,
   notifyCreatorOfReviewStart,
@@ -100,7 +101,7 @@ export async function submitForReview(
 
     // Send notifications to reviewers (async, don't wait)
     notifyReviewersOfNewContent(contentId, requiredReviewers).catch((error) =>
-      console.error("Failed to send reviewer notifications:", error)
+      logger.error("Failed to send reviewer notifications:", error)
     );
 
     revalidatePath(`/dashboard/content/${contentId}/edit`);
@@ -109,7 +110,7 @@ export async function submitForReview(
 
     return { success: true, data: undefined };
   } catch (error) {
-    console.error("Error submitting content for review:", error);
+    logger.error("Error submitting content for review:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to submit for review",
@@ -197,7 +198,7 @@ export async function claimReview(
 
     // Notify creator that review has started (async, don't wait)
     notifyCreatorOfReviewStart(assignment.contentId, assignment.reviewerType).catch(
-      (error) => console.error("Failed to send review start notification:", error)
+      (error) => logger.error("Failed to send review start notification:", error)
     );
 
     revalidatePath("/dashboard/reviews");
@@ -205,7 +206,7 @@ export async function claimReview(
 
     return { success: true, data: undefined };
   } catch (error) {
-    console.error("Error claiming review:", error);
+    logger.error("Error claiming review:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to claim review",
@@ -269,7 +270,7 @@ export async function getReviewQueue() {
 
     return { success: true, data: assignments };
   } catch (error) {
-    console.error("Error getting review queue:", error);
+    logger.error("Error getting review queue:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to get review queue",
@@ -316,7 +317,7 @@ export async function getMyAssignedReviews() {
 
     return { success: true, data: assignments };
   } catch (error) {
-    console.error("Error getting assigned reviews:", error);
+    logger.error("Error getting assigned reviews:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to get assigned reviews",
@@ -362,7 +363,7 @@ export async function getMyCompletedReviews() {
 
     return { success: true, data: decisions };
   } catch (error) {
-    console.error("Error getting completed reviews:", error);
+    logger.error("Error getting completed reviews:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to get completed reviews",
@@ -416,7 +417,7 @@ export async function canApprove(contentId: string): Promise<boolean> {
 
     return true;
   } catch (error) {
-    console.error("Error checking if content can be approved:", error);
+    logger.error("Error checking if content can be approved:", error);
     return false;
   }
 }
@@ -542,7 +543,7 @@ export async function submitDecision(data: {
       reviewerType: assignment.reviewerType,
       comment: data.comment,
     }).catch((error) =>
-      console.error("Failed to send decision notification:", error)
+      logger.error("Failed to send decision notification:", error)
     );
 
     revalidatePath("/dashboard/reviews");
@@ -551,7 +552,7 @@ export async function submitDecision(data: {
 
     return { success: true, data: undefined };
   } catch (error) {
-    console.error("Error submitting decision:", error);
+    logger.error("Error submitting decision:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to submit decision",

@@ -33,7 +33,7 @@ export function InviteForm() {
       setTimeout(() => {
         router.push("/admin/users")
       }, 2000)
-    } catch (err) {
+    } catch {
       setError("Failed to send invitation")
     } finally {
       setLoading(false)

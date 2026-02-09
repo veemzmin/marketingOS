@@ -5,24 +5,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getJobStatus, cancelJob } from "@/lib/actions/generation";
+import type { GenerationJob } from "../../../generated/prisma/client";
 
 interface JobStatusProps {
   jobId: string;
-  onComplete?: (result: any) => void;
+  onComplete?: (result: GenerationJob["result"]) => void;
   onError?: (error: string) => void;
 }
 
 export function JobStatus({ jobId, onComplete, onError }: JobStatusProps) {
-  const [job, setJob] = useState<any>(null);
+  const [job, setJob] = useState<GenerationJob | null>(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-
     async function fetchStatus() {
       const result = await getJobStatus(jobId);
-      if (result.success) {
+      if (result.success && result.data) {
         setJob(result.data);
         setLoading(false);
 
@@ -46,10 +45,9 @@ export function JobStatus({ jobId, onComplete, onError }: JobStatusProps) {
       }
     }
 
-    fetchStatus();
-
     // Poll every 2 seconds if job is not complete
-    interval = setInterval(fetchStatus, 2000);
+    const interval = setInterval(fetchStatus, 2000);
+    fetchStatus();
 
     return () => clearInterval(interval);
   }, [jobId, onComplete, onError]);
@@ -62,7 +60,7 @@ export function JobStatus({ jobId, onComplete, onError }: JobStatusProps) {
     if (result.success) {
       // Refresh status
       const statusResult = await getJobStatus(jobId);
-      if (statusResult.success) {
+      if (statusResult.success && statusResult.data) {
         setJob(statusResult.data);
       }
     } else {

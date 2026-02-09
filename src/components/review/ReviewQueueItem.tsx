@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { claimReview } from "@/lib/actions/review";
 import { formatDistanceToNow } from "date-fns";
+import { logger } from "@/lib/logger";
 
 interface ReviewQueueItemProps {
   assignment: {
@@ -50,7 +51,7 @@ export function ReviewQueueItem({ assignment, mode }: ReviewQueueItemProps) {
         alert(result.error);
       }
     } catch (error) {
-      console.error("Error claiming review:", error);
+      logger.error("Error claiming review:", error);
       alert("Failed to claim review");
     } finally {
       setIsLoading(false);

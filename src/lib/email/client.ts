@@ -1,4 +1,5 @@
 import { Resend } from "resend"
+import { logger } from "@/lib/logger"
 
 // Email client configuration
 const EMAIL_PROVIDER = process.env.EMAIL_PROVIDER || "console"
@@ -23,15 +24,15 @@ export interface SendEmailOptions {
 export async function sendEmail(options: SendEmailOptions): Promise<void> {
   if (EMAIL_PROVIDER === "console") {
     // Development mode - log to console
-    console.log("\n=== EMAIL SENT (CONSOLE MODE) ===")
-    console.log(`To: ${options.to}`)
-    console.log(`From: ${EMAIL_FROM}`)
-    console.log(`Subject: ${options.subject}`)
-    console.log(`HTML Body:\n${options.html}`)
+    logger.info("\n=== EMAIL SENT (CONSOLE MODE) ===")
+    logger.info(`To: ${options.to}`)
+    logger.info(`From: ${EMAIL_FROM}`)
+    logger.info(`Subject: ${options.subject}`)
+    logger.info(`HTML Body:\n${options.html}`)
     if (options.text) {
-      console.log(`Text Body:\n${options.text}`)
+      logger.info(`Text Body:\n${options.text}`)
     }
-    console.log("=================================\n")
+    logger.info("=================================\n")
     return
   }
 

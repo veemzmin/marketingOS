@@ -30,7 +30,7 @@ export default function SecuritySettingsPage() {
       setQrCode(data.qrCode)
       setSecret(data.secret)
       setSetupState("qr")
-    } catch (err) {
+    } catch {
       setError("Network error. Please try again.")
       setSetupState("idle")
     }
@@ -57,7 +57,7 @@ export default function SecuritySettingsPage() {
       }
 
       setSetupState("success")
-    } catch (err) {
+    } catch {
       setError("Network error. Please try again.")
       setSetupState("qr")
     }
@@ -115,7 +115,7 @@ export default function SecuritySettingsPage() {
                 <div>
                   <h3 className="text-lg font-medium text-gray-900">Step 2: Manual Entry (Optional)</h3>
                   <p className="mt-1 text-sm text-gray-600">
-                    If you can't scan the QR code, enter this secret manually:
+                    If you can&apos;t scan the QR code, enter this secret manually:
                   </p>
                   <div className="mt-2 rounded-md bg-gray-100 p-3">
                     <code className="text-sm font-mono text-gray-900">{secret}</code>
@@ -171,7 +171,7 @@ export default function SecuritySettingsPage() {
               <div className="mt-6">
                 <div className="rounded-md bg-green-50 p-4">
                   <p className="text-sm text-green-800">
-                    2FA has been successfully enabled for your account! You'll now need to enter a code from your
+                    2FA has been successfully enabled for your account! You&apos;ll now need to enter a code from your
                     authenticator app when signing in.
                   </p>
                 </div>

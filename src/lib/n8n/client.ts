@@ -1,4 +1,5 @@
 import { GenerationJobType } from "@/lib/db/types";
+import { logger } from "@/lib/logger";
 
 const N8N_WEBHOOK_BASE =
   process.env.N8N_WEBHOOK_URL || "https://n8n.srv1221317.hstgr.cloud/webhook";
@@ -16,7 +17,7 @@ export interface N8nJobPayload {
   organizationId: string;
   jobType: GenerationJobType;
   prompt: string;
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
   callbackUrl: string;
 }
 
@@ -54,7 +55,7 @@ export async function dispatchToN8n(
       executionId: data.executionId || data.workflowId || undefined,
     };
   } catch (error) {
-    console.error("Error dispatching to n8n:", error);
+    logger.error("Error dispatching to n8n:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
@@ -66,11 +67,11 @@ export async function dispatchToN8n(
  * Check job status (polling fallback if callback doesn't work)
  */
 export async function getN8nExecutionStatus(
-  executionId: string
-): Promise<{ status: string; result?: any; error?: string }> {
+  _executionId: string
+): Promise<{ status: string; result?: unknown; error?: string }> {
   // This would require n8n API credentials
   // For now, we rely on callbacks
-  console.warn("Status polling not implemented, use callbacks instead");
+  logger.warn("Status polling not implemented, use callbacks instead");
   return {
     status: "unknown",
     error: "Status polling not available, use callback mechanism",

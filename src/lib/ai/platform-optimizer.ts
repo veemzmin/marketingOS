@@ -123,7 +123,7 @@ export function suggestHashtags(
 export function suggestPostingTime(
   platform: Platform,
   audience: string,
-  timezone: string = "America/New_York"
+  _timezone: string = "America/New_York"
 ): Array<{ day: string; time: string; reason: string }> {
   // Best times based on platform research
   const timings: Record<

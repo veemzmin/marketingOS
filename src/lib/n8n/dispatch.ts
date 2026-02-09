@@ -2,7 +2,8 @@
 
 import { db } from "@/lib/db";
 import { dispatchToN8n } from "./client";
-import { GenerationJobType, GenerationJobStatus } from "@/lib/db/types";
+import { GenerationJobType } from "@/lib/db/types";
+import { logger } from "@/lib/logger";
 
 const CALLBACK_URL = `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/n8n/callback`;
 
@@ -11,7 +12,7 @@ export interface DispatchJobParams {
   contentId?: string;
   jobType: GenerationJobType;
   prompt: string;
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
 }
 
 /**
@@ -70,7 +71,7 @@ export async function dispatchJob(
       };
     }
   } catch (error) {
-    console.error("Error dispatching job:", error);
+    logger.error("Error dispatching job:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
@@ -108,7 +109,7 @@ export async function retryFailedJobs(): Promise<{
           organizationId: job.organizationId,
           jobType: job.jobType,
           prompt: job.prompt,
-          parameters: job.parameters as Record<string, any>,
+          parameters: job.parameters as Record<string, unknown>,
           callbackUrl: CALLBACK_URL,
         });
 
@@ -141,7 +142,7 @@ export async function retryFailedJobs(): Promise<{
 
     return { retriedCount, errors };
   } catch (error) {
-    console.error("Error retrying failed jobs:", error);
+    logger.error("Error retrying failed jobs:", error);
     return {
       retriedCount,
       errors: [
