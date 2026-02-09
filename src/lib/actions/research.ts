@@ -38,6 +38,13 @@ type ResearchOutputPayload = {
   content: string
 }
 
+const N8N_RESEARCH_WEBHOOK_URL = process.env.N8N_RESEARCH_WEBHOOK_URL
+const MARKETING_OS_RESEARCH_CALLBACK_URL =
+  process.env.MARKETING_OS_RESEARCH_CALLBACK_URL ||
+  (process.env.NEXTAUTH_URL
+    ? `${process.env.NEXTAUTH_URL}/api/research/ingest-callback`
+    : undefined)
+
 const STOP_WORDS = new Set([
   'the', 'and', 'for', 'with', 'that', 'this', 'from', 'into', 'over', 'under',
   'your', 'our', 'their', 'they', 'them', 'about', 'which', 'will', 'would',
@@ -71,6 +78,14 @@ function buildQuestions(prompt: string): string[] {
   }
 
   return baseQuestions
+}
+
+function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
 }
 
 function buildSources({
@@ -420,4 +435,73 @@ export async function completeResearchRunAction(formData: FormData) {
 
   revalidatePath('/dashboard/research')
   redirect(`/dashboard/research?runId=${runId}&projectId=${run.projectId}`)
+}
+
+export async function refreshResearchSourcesAction(formData: FormData) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return
+  }
+
+  if (!N8N_RESEARCH_WEBHOOK_URL || !MARKETING_OS_RESEARCH_CALLBACK_URL) {
+    logger.error('N8N research webhook or callback URL not configured.')
+    return
+  }
+
+  const organizationId = await resolveOrganizationId(session.user.id)
+  if (!organizationId) {
+    return
+  }
+
+  const projectId = String(formData.get('projectId') || '').trim()
+  if (!projectId) {
+    return
+  }
+
+  const project = await prisma.researchProject.findUnique({
+    where: { id: projectId, organizationId },
+  })
+
+  if (!project) {
+    return
+  }
+
+  const latestRun = await prisma.researchRun.findFirst({
+    where: { projectId },
+    orderBy: { createdAt: 'desc' },
+  })
+
+  const keywords = extractKeywords(
+    `${project.title} ${project.industry} ${latestRun?.prompt || ''}`
+  )
+
+  const payload = {
+    organizationId,
+    projectId,
+    industry: project.industry,
+    industrySlug: slugify(project.industry),
+    projectTitle: project.title,
+    prompt: latestRun?.prompt || '',
+    keywords,
+    callbackUrl: MARKETING_OS_RESEARCH_CALLBACK_URL,
+  }
+
+  try {
+    const response = await fetch(N8N_RESEARCH_WEBHOOK_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    })
+
+    if (!response.ok) {
+      logger.error('Failed to trigger research ingest:', response.statusText)
+    }
+  } catch (error) {
+    logger.error('Error triggering research ingest:', error)
+  }
+
+  revalidatePath('/dashboard/research')
+  redirect(`/dashboard/research?projectId=${projectId}`)
 }
