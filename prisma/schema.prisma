@@ -32,6 +32,7 @@ model Organization {
   generationJobs    GenerationJob[]
   knowledgeEntries  KnowledgeEntry[]
   assets            Asset[]
+  researchProjects  ResearchProject[]
 
   @@map("organizations")
 }
@@ -60,6 +61,7 @@ model User {
   reviewAssignments       ReviewAssignment[]  @relation("ReviewAssignments")
   reviewerTypes           UserReviewerType[]
   contentVersionsSubmitted ContentVersion[]   @relation("VersionSubmitter")
+  researchProjectsCreated ResearchProject[]   @relation("ResearchProjectCreator")
 
   @@map("users")
 }
@@ -113,6 +115,24 @@ enum GenerationJobStatus {
   PROCESSING // n8n confirmed processing
   COMPLETED // Result received
   FAILED // Error occurred
+}
+
+/// ResearchRunStatus - Status of research runs
+enum ResearchRunStatus {
+  PENDING // Awaiting clarifying inputs
+  RUNNING // Generating outputs
+  COMPLETED // Outputs available
+  FAILED // Error occurred
+}
+
+/// ResearchOutputType - Types of research deliverables
+enum ResearchOutputType {
+  EXEC_SUMMARY
+  FULL_REPORT
+  SLIDE_OUTLINE
+  DATA_APPENDIX
+  ACTION_PLAN
+  IDEAS
 }
 
 /// CampaignStatus - Lifecycle for marketing campaigns
@@ -519,4 +539,85 @@ model Asset {
   @@index([contentId])
   @@index([type])
   @@map("assets")
+}
+
+// ============================================================================
+// RESEARCH COMMAND CENTER MODELS
+// ============================================================================
+
+/// ResearchProject - Long-lived research workspace for an industry/initiative
+model ResearchProject {
+  id              String   @id @default(cuid())
+  organizationId  String
+  title           String
+  industry        String
+  description     String?
+  createdByUserId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relationships
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy    User?        @relation("ResearchProjectCreator", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  runs         ResearchRun[]
+
+  @@index([organizationId])
+  @@index([createdByUserId])
+  @@map("research_projects")
+}
+
+/// ResearchRun - A single research request + outputs
+model ResearchRun {
+  id          String            @id @default(cuid())
+  projectId   String
+  prompt      String            @db.Text
+  status      ResearchRunStatus @default(PENDING)
+  questions   Json?
+  answers     Json?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  completedAt DateTime?
+
+  // Relationships
+  project  ResearchProject  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  outputs  ResearchOutput[]
+  sources  ResearchSource[]
+
+  @@index([projectId])
+  @@index([status])
+  @@map("research_runs")
+}
+
+/// ResearchSource - Citations used in research outputs
+model ResearchSource {
+  id         String   @id @default(cuid())
+  runId      String
+  title      String
+  url        String?
+  publisher  String?
+  sourceType String
+  summary    String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  // Relationships
+  run ResearchRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+  @@map("research_sources")
+}
+
+/// ResearchOutput - Persisted research deliverables
+model ResearchOutput {
+  id         String             @id @default(cuid())
+  runId      String
+  outputType ResearchOutputType
+  content    String             @db.Text
+  createdAt  DateTime           @default(now())
+
+  // Relationships
+  run ResearchRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+  @@index([outputType])
+  @@map("research_outputs")
 }
