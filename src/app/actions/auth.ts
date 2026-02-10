@@ -92,6 +92,7 @@ export async function loginAction(_prevState: unknown, formData: FormData) {
         totpEnabled: true,
         passwordHash: true,
         emailVerified: true,
+        isActive: true,
       },
     })
 
