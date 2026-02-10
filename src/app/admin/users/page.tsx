@@ -1,6 +1,7 @@
 import { requireAdmin } from "@/lib/auth/permissions"
-import { prisma } from "@/lib/db/client"
+import { prisma, basePrisma } from "@/lib/db/client"
 import { headers } from "next/headers"
+import { auth } from "@/auth"
 import Link from "next/link"
 import { RoleChangeDropdown } from "./role-change-dropdown"
 import { AppShell } from "@/components/layout/AppShell"
@@ -11,7 +12,19 @@ export default async function AdminUsersPage() {
 
   // Get tenant context
   const headersList = await headers()
-  const tenantId = headersList.get("x-tenant-id")
+  let tenantId = headersList.get("x-tenant-id")
+
+  if (!tenantId) {
+    const session = await auth()
+    if (session?.user?.id) {
+      const fallbackMembership = await basePrisma.userOrganization.findFirst({
+        where: { userId: session.user.id },
+        orderBy: { createdAt: "asc" },
+        select: { organizationId: true },
+      })
+      tenantId = fallbackMembership?.organizationId || null
+    }
+  }
 
   if (!tenantId) {
     return <div>No organization context</div>
