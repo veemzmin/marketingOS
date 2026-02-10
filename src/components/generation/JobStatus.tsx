@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getJobStatus, cancelJob } from "@/lib/actions/generation";
-import type { GenerationJob } from "../../../generated/prisma/client";
+import type { GenerationJob } from "@prisma/client";
 
 interface JobStatusProps {
   jobId: string;

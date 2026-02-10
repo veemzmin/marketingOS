@@ -1,6 +1,6 @@
 import { auth } from "@/auth"
 import { prisma } from "@/lib/db/client"
-import { Role } from "../../../generated/prisma/client"
+import { Role } from "@prisma/client"
 import { redirect } from "next/navigation"
 import { headers } from "next/headers"
 
