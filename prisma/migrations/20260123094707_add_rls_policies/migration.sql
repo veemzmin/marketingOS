@@ -4,23 +4,33 @@
 -- ============================================================================
 
 -- Create app_user role for application connections (not superuser)
+-- Some managed Postgres providers disallow CREATE ROLE. In that case, skip role creation/grants.
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'app_user') THEN
-    CREATE ROLE app_user WITH LOGIN PASSWORD 'app_password_change_in_production';
+    BEGIN
+      CREATE ROLE app_user WITH LOGIN PASSWORD 'app_password_change_in_production';
+    EXCEPTION
+      WHEN insufficient_privilege THEN
+        RAISE NOTICE 'Skipping app_user role creation due to insufficient privileges.';
+    END;
+  END IF;
+
+  IF EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'app_user') THEN
+    BEGIN
+      EXECUTE 'GRANT CONNECT ON DATABASE marketing_os TO app_user';
+      EXECUTE 'GRANT USAGE ON SCHEMA public TO app_user';
+      EXECUTE 'GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app_user';
+      EXECUTE 'GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO app_user';
+      EXECUTE 'ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO app_user';
+      EXECUTE 'ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO app_user';
+    EXCEPTION
+      WHEN insufficient_privilege THEN
+        RAISE NOTICE 'Skipping app_user grants due to insufficient privileges.';
+    END;
   END IF;
 END
 $$;
-
--- Grant necessary permissions to app_user
-GRANT CONNECT ON DATABASE marketing_os TO app_user;
-GRANT USAGE ON SCHEMA public TO app_user;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app_user;
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO app_user;
-
--- Set default privileges for future tables
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO app_user;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO app_user;
 
 -- ============================================================================
 -- ENABLE RLS ON TENANT-SCOPED TABLES
