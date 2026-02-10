@@ -1,0 +1,17 @@
+# Dependencies
+node_modules
+
+# Next.js
+.next
+out
+next-env.d.ts
+
+# Environment variables
+.env
+.env*.local
+
+# Build output
+/generated/prisma
+
+# TypeScript
+*.tsbuildinfo
