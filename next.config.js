@@ -4,9 +4,6 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ["@prisma/client", "prisma"],
   },
-  outputFileTracingIncludes: {
-    "/**/*": ["./generated/prisma/**", "./generated/prisma/.prisma/**", "./node_modules/.prisma/**"],
-  },
   webpack: (config, { isServer }) => {
     // Fix for Prisma node:crypto imports
     if (!isServer) {

@@ -4,4 +4,3 @@ export {
   ReviewerType,
   ContentStatus,
 } from "@prisma/client"
-} from "@prisma/client"
