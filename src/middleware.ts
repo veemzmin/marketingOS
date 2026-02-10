@@ -51,7 +51,31 @@ export async function middleware(request: NextRequest) {
       cache: "no-store",
     })
 
-    if (!resolveResponse.ok) {
+    let resolved: { tenantId: string; organizationSlug: string } | null = null
+
+    if (resolveResponse.ok) {
+      resolved = (await resolveResponse.json()) as {
+        tenantId: string
+        organizationSlug: string
+      }
+    } else if (requestedSlug || tenantSlugCookie) {
+      const fallbackUrl = new URL("/api/tenant/resolve", request.url)
+      const fallbackResponse = await fetch(fallbackUrl, {
+        headers: {
+          cookie: request.headers.get("cookie") || "",
+        },
+        cache: "no-store",
+      })
+
+      if (fallbackResponse.ok) {
+        resolved = (await fallbackResponse.json()) as {
+          tenantId: string
+          organizationSlug: string
+        }
+      }
+    }
+
+    if (!resolved) {
       if (pathname.startsWith("/api/")) {
         return NextResponse.json(
           { error: "Unauthorized tenant" },
@@ -59,12 +83,12 @@ export async function middleware(request: NextRequest) {
         )
       }
 
-      return NextResponse.redirect(new URL("/unauthorized", request.url))
-    }
-
-    const resolved = (await resolveResponse.json()) as {
-      tenantId: string
-      organizationSlug: string
+      const redirectResponse = NextResponse.redirect(
+        new URL("/unauthorized", request.url)
+      )
+      redirectResponse.cookies.delete("tenant-id")
+      redirectResponse.cookies.delete("tenant-slug")
+      return redirectResponse
     }
 
     tenantId = resolved.tenantId
