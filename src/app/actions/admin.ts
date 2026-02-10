@@ -233,7 +233,7 @@ export async function removeUserFromOrganizationAction(formData: FormData): Prom
 
   const session = await auth()
   if (!session?.user?.id) {
-    return { error: "Not authenticated" }
+    throw new Error("Not authenticated")
   }
 
   const userId = String(formData.get("userId") || "")
