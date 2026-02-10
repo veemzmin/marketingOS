@@ -136,6 +136,14 @@ export async function loginAction(_prevState: unknown, formData: FormData) {
       throw error
     }
     logger.error("Login error:", error)
+    if (process.env.DEV_LOGIN_ENABLED === "true") {
+      return {
+        error:
+          error instanceof Error
+            ? `Login failed: ${error.message}`
+            : "Login failed. Please try again.",
+      }
+    }
     return { error: "Login failed. Please try again." }
   }
 }
