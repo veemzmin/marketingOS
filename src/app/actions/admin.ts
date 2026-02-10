@@ -1,6 +1,6 @@
 "use server"
 
-import { prisma } from "@/lib/db/client"
+import { prisma, basePrisma } from "@/lib/db/client"
 import { auth } from "@/auth"
 import { headers } from "next/headers"
 import { requireAdmin } from "@/lib/auth/permissions"
@@ -9,6 +9,24 @@ import { sendInvitationEmail } from "@/lib/email/client"
 import { Role } from "@prisma/client"
 import { randomUUID } from "crypto"
 import { revalidatePath } from "next/cache"
+import { hashPassword, validatePasswordStrength } from "@/lib/auth/password"
+
+async function resolveTenantId(userId: string) {
+  const headersList = await headers()
+  const headerTenantId = headersList.get("x-tenant-id")
+
+  if (headerTenantId) {
+    return headerTenantId
+  }
+
+  const membership = await basePrisma.userOrganization.findFirst({
+    where: { userId },
+    orderBy: { createdAt: "asc" },
+    select: { organizationId: true },
+  })
+
+  return membership?.organizationId || null
+}
 
 /**
  * Invite a user to the organization
@@ -29,8 +47,7 @@ export async function inviteUserAction(email: string, role: Role) {
     return { error: "Not authenticated" }
   }
 
-  const headersList = await headers()
-  const tenantId = headersList.get("x-tenant-id")
+  const tenantId = await resolveTenantId(session.user.id)
 
   if (!tenantId) {
     return { error: "No organization context" }
@@ -47,13 +64,13 @@ export async function inviteUserAction(email: string, role: Role) {
   }
 
   // Check if user already exists
-  const existingUser = await prisma.user.findUnique({
+  const existingUser = await basePrisma.user.findUnique({
     where: { email },
   })
 
   if (existingUser) {
     // Check if already a member
-    const existingMembership = await prisma.userOrganization.findFirst({
+    const existingMembership = await basePrisma.userOrganization.findFirst({
       where: {
         userId: existingUser.id,
         organizationId: tenantId,
@@ -65,7 +82,8 @@ export async function inviteUserAction(email: string, role: Role) {
     }
 
     // Add existing user to organization
-    await prisma.userOrganization.create({
+    await basePrisma.$executeRaw`SELECT set_config('app.current_tenant_id', ${tenantId}, false)`
+    await basePrisma.userOrganization.create({
       data: {
         userId: existingUser.id,
         organizationId: tenantId,
@@ -100,18 +118,20 @@ export async function inviteUserAction(email: string, role: Role) {
   // For now, let's create the user with unverified email and store the invite token
 
   // Create unverified user
-  const newUser = await prisma.user.create({
+  const newUser = await basePrisma.user.create({
     data: {
       email,
       name: null,
       emailVerified: null,
       passwordHash: "", // Will be set when they accept invitation
+      isActive: true,
       totpEnabled: false,
     },
   })
 
   // Add to organization with specified role
-  await prisma.userOrganization.create({
+  await basePrisma.$executeRaw`SELECT set_config('app.current_tenant_id', ${tenantId}, false)`
+  await basePrisma.userOrganization.create({
     data: {
       userId: newUser.id,
       organizationId: tenantId,
@@ -120,7 +140,7 @@ export async function inviteUserAction(email: string, role: Role) {
   })
 
   // Create verification token for invitation acceptance
-  await prisma.emailVerificationToken.create({
+  await basePrisma.emailVerificationToken.create({
     data: {
       userId: newUser.id,
       token,
@@ -167,15 +187,14 @@ export async function changeUserRoleAction(userId: string, newRole: Role) {
     return { error: "Cannot change your own role" }
   }
 
-  const headersList = await headers()
-  const tenantId = headersList.get("x-tenant-id")
+  const tenantId = await resolveTenantId(session.user.id)
 
   if (!tenantId) {
     return { error: "No organization context" }
   }
 
   // Get current membership
-  const membership = await prisma.userOrganization.findFirst({
+  const membership = await basePrisma.userOrganization.findFirst({
     where: {
       userId,
       organizationId: tenantId,
@@ -189,7 +208,8 @@ export async function changeUserRoleAction(userId: string, newRole: Role) {
   const oldRole = membership.role
 
   // Update role
-  await prisma.userOrganization.update({
+  await basePrisma.$executeRaw`SELECT set_config('app.current_tenant_id', ${tenantId}, false)`
+  await basePrisma.userOrganization.update({
     where: { id: membership.id },
     data: { role: newRole },
   })
@@ -221,15 +241,15 @@ export async function removeUserFromOrganizationAction(userId: string) {
     return { error: "Cannot remove yourself from the organization" }
   }
 
-  const headersList = await headers()
-  const tenantId = headersList.get("x-tenant-id")
+  const tenantId = await resolveTenantId(session.user.id)
 
   if (!tenantId) {
     return { error: "No organization context" }
   }
 
   // Delete membership
-  await prisma.userOrganization.deleteMany({
+  await basePrisma.$executeRaw`SELECT set_config('app.current_tenant_id', ${tenantId}, false)`
+  await basePrisma.userOrganization.deleteMany({
     where: {
       userId,
       organizationId: tenantId,
@@ -237,11 +257,11 @@ export async function removeUserFromOrganizationAction(userId: string) {
   })
 
   // Log the removal
-  const auditHeadersList = await headers()
-  const auditTenantId = auditHeadersList.get("x-tenant-id")
+  const auditTenantId = tenantId
   
   if (auditTenantId) {
-    await prisma.auditLog.create({
+    await basePrisma.$executeRaw`SELECT set_config('app.current_tenant_id', ${auditTenantId}, false)`
+    await basePrisma.auditLog.create({
       data: {
         organizationId: auditTenantId,
         userId: session.user.id,
@@ -256,4 +276,162 @@ export async function removeUserFromOrganizationAction(userId: string) {
 
   revalidatePath("/admin/users")
   return { success: true, message: "User removed from organization" }
+}
+
+export async function createUserAction(formData: FormData) {
+  await requireAdmin()
+
+  const session = await auth()
+  if (!session?.user?.id) {
+    return { error: "Not authenticated" }
+  }
+
+  const tenantId = await resolveTenantId(session.user.id)
+  if (!tenantId) {
+    return { error: "No organization context" }
+  }
+
+  const email = String(formData.get("email") || "").trim().toLowerCase()
+  const name = String(formData.get("name") || "").trim()
+  const role = String(formData.get("role") || "VIEWER") as Role
+  const password = String(formData.get("password") || "")
+
+  if (!email || !password) {
+    return { error: "Email and password are required" }
+  }
+
+  const validation = validatePasswordStrength(password)
+  if (!validation.valid) {
+    return { error: validation.errors.join(", ") }
+  }
+
+  const existingUser = await basePrisma.user.findUnique({ where: { email } })
+  let userId = existingUser?.id
+
+  if (!existingUser) {
+    const passwordHash = await hashPassword(password)
+    const newUser = await basePrisma.user.create({
+      data: {
+        email,
+        name: name || null,
+        passwordHash,
+        emailVerified: new Date(),
+        isActive: true,
+      },
+    })
+    userId = newUser.id
+  }
+
+  if (!userId) {
+    return { error: "Unable to create user" }
+  }
+
+  const existingMembership = await basePrisma.userOrganization.findFirst({
+    where: {
+      userId,
+      organizationId: tenantId,
+    },
+  })
+
+  if (!existingMembership) {
+    await basePrisma.$executeRaw`SELECT set_config('app.current_tenant_id', ${tenantId}, false)`
+    await basePrisma.userOrganization.create({
+      data: {
+        userId,
+        organizationId: tenantId,
+        role,
+      },
+    })
+  }
+
+  revalidatePath("/admin/users")
+  return { success: true, message: "User created" }
+}
+
+export async function updateUserAction(formData: FormData) {
+  await requireAdmin()
+
+  const session = await auth()
+  if (!session?.user?.id) {
+    return { error: "Not authenticated" }
+  }
+
+  const userId = String(formData.get("userId") || "")
+  const name = String(formData.get("name") || "").trim()
+  const email = String(formData.get("email") || "").trim().toLowerCase()
+
+  if (!userId || !email) {
+    return { error: "User and email are required" }
+  }
+
+  await basePrisma.user.update({
+    where: { id: userId },
+    data: {
+      email,
+      name: name || null,
+    },
+  })
+
+  revalidatePath("/admin/users")
+  return { success: true, message: "User updated" }
+}
+
+export async function resetPasswordAction(formData: FormData) {
+  await requireAdmin()
+
+  const session = await auth()
+  if (!session?.user?.id) {
+    return { error: "Not authenticated" }
+  }
+
+  const userId = String(formData.get("userId") || "")
+  const password = String(formData.get("password") || "")
+
+  if (!userId || !password) {
+    return { error: "User and password are required" }
+  }
+
+  const validation = validatePasswordStrength(password)
+  if (!validation.valid) {
+    return { error: validation.errors.join(", ") }
+  }
+
+  const passwordHash = await hashPassword(password)
+  await basePrisma.user.update({
+    where: { id: userId },
+    data: {
+      passwordHash,
+      emailVerified: new Date(),
+    },
+  })
+
+  revalidatePath("/admin/users")
+  return { success: true, message: "Password reset" }
+}
+
+export async function setUserActiveAction(formData: FormData) {
+  await requireAdmin()
+
+  const session = await auth()
+  if (!session?.user?.id) {
+    return { error: "Not authenticated" }
+  }
+
+  const userId = String(formData.get("userId") || "")
+  const active = String(formData.get("active") || "true") === "true"
+
+  if (!userId) {
+    return { error: "User is required" }
+  }
+
+  await basePrisma.user.update({
+    where: { id: userId },
+    data: {
+      isActive: active,
+      disabledAt: active ? null : new Date(),
+    },
+  })
+
+  revalidatePath("/admin/users")
+  return { success: true, message: active ? "User reactivated" : "User deactivated" }
 }

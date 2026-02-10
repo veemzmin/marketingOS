@@ -23,6 +23,7 @@ async function main() {
         name: "Admin",
         passwordHash,
         emailVerified: new Date(),
+        isActive: true,
       },
     })
     console.log(`Created user ${email}`)

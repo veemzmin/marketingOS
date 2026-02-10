@@ -50,6 +50,7 @@ async function ensureDevBootstrap(email: string, password: string) {
         name: "Admin",
         passwordHash,
         emailVerified: new Date(),
+        isActive: true,
       },
     })
   } else if (!user.emailVerified) {
@@ -96,6 +97,10 @@ export async function loginAction(_prevState: unknown, formData: FormData) {
 
     if (!user) {
       return { error: "Invalid credentials" }
+    }
+
+    if (user.isActive === false) {
+      return { error: "Account disabled" }
     }
 
     // Check if email is verified
