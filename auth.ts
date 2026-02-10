@@ -1,6 +1,6 @@
 import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
-import { prisma } from "@/lib/db/client"
+import { basePrisma } from "@/lib/db/client"
 import { comparePassword } from "@/lib/auth/password"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -22,7 +22,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           const userId = password.replace("2fa-bypass-", "")
 
           // Find user by ID and verify 2FA is enabled
-          const user = await prisma.user.findUnique({
+          const user = await basePrisma.user.findUnique({
             where: { id: userId },
           })
 
@@ -39,7 +39,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         // Normal authentication flow
         // Find user by email
-        const user = await prisma.user.findUnique({
+        const user = await basePrisma.user.findUnique({
           where: { email: credentials.email as string },
         })
 
