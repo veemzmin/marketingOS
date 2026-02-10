@@ -15,8 +15,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Foundation & Authentication** - Multi-tenant architecture with secure access control
 - [x] **Phase 2: Governance Engine** - Real-time policy validation and compliance scoring
 - [x] **Phase 3: Content Creation** - Draft creation with live governance feedback
-- [ ] **Phase 4: Review Workflow** - Role-based approval workflows and notifications
-- [ ] **Phase 5: AI Generation** - Intelligent content generation with n8n integration
+- [x] **Phase 4: Review Workflow** - Role-based approval workflows and notifications
+- [x] **Phase 5: AI Generation** - Intelligent content generation with n8n integration
+- [ ] **Phase 6: Strategy Intake Upgrade** - Improve trust, explainability, and compliance safety for behavioral health marketing
 
 ## Phase Details
 
@@ -102,10 +103,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 04-01-PLAN.md — Review workflow schema (ReviewAssignment, ReviewerType, multi-reviewer support)
-- [ ] 04-02-PLAN.md — Review queue and routing logic
-- [ ] 04-03-PLAN.md — Review UI with governance feedback
-- [ ] 04-04-PLAN.md — Review notifications
+- [x] 04-01-PLAN.md — Review workflow schema (ReviewAssignment, ReviewerType, multi-reviewer support)
+- [x] 04-02-PLAN.md — Review queue and routing logic
+- [x] 04-03-PLAN.md — Review UI with governance feedback
+- [x] 04-04-PLAN.md — Review notifications
 
 ### Phase 5: AI Generation
 **Goal**: AI-powered content generation with governance constraints and n8n media generation
@@ -127,25 +128,48 @@ Plans:
 **Plans**: 5 plans
 
 Plans:
-- [ ] 05-01-PLAN.md — n8n integration layer (webhooks, job tracking, callbacks)
-- [ ] 05-02-PLAN.md — AI text generation with governance prompts
-- [ ] 05-03-PLAN.md — Blog post generation with SEO optimization
-- [ ] 05-04-PLAN.md — Social media generation with platform optimization
-- [ ] 05-05-PLAN.md — Image and video generation via n8n
+- [x] 05-01-PLAN.md — n8n integration layer (webhooks, job tracking, callbacks)
+- [x] 05-02-PLAN.md — AI text generation with governance prompts
+- [x] 05-03-PLAN.md — Blog post generation with SEO optimization
+- [x] 05-04-PLAN.md — Social media generation with platform optimization
+- [x] 05-05-PLAN.md — Image and video generation via n8n
+
+### Phase 6: Strategy Intake Upgrade
+**Goal**: Improve trust, explainability, and compliance safety for behavioral health marketing strategy intake
+**Depends on**: Phase 5 (strategy intake engine built in prior phases)
+**Success Criteria** (what must be TRUE):
+  1. Engine outputs confidenceScore (0–100, deterministic rule-based)
+  2. Engine outputs evidence map per detected signal (linked to matchedTerms)
+  3. Engine outputs requiresVisibilityArchive and requiresApprovalWorkflow as separate flags
+  4. Engine outputs stakeholdersClarityLevel (high/medium/low) replacing binary unclear flag
+  5. Engine outputs campaign stack (archetype-driven, 3–6 items)
+  6. UI surfaces all new fields: confidence, signals, clarity, stack, why section, separate compliance notes
+  7. Safety guardrails enforce no urgency CTAs and no patient stories in experiment library
+  8. Channels are archetype-first; paid social only appears with explicit paid signal
+  9. Channel and asset arrays are deduplicated
+  10. Risk logic triggers claims warning on any healthcare-related signal
+**Plans**: 4 plans
+
+Plans:
+- [ ] 06-01-PLAN.md — Engine upgrade: new types, graded clarity, confidence score, evidence, split flags, stack
+- [ ] 06-02-PLAN.md — Action mapper: pass-through new fields, archetype-first channels, dedup, risk fix
+- [ ] 06-03-PLAN.md — UI upgrade: signal chips, confidence bar, clarity indicator, stack, why section, compliance notes
+- [ ] 06-04-PLAN.md — Safety tests: guardrails for urgency CTAs, patient stories, and behavioral regression tests
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Authentication | 8/8 | ✓ Complete | 2026-01-23 |
 | 2. Governance Engine | 2/2 | ✓ Complete | 2026-01-25 |
 | 3. Content Creation | 6/6 | ✓ Complete | 2026-01-29 |
-| 4. Review Workflow | 0/4 | Planned | - |
-| 5. AI Generation | 0/5 | Planned | - |
+| 4. Review Workflow | 4/4 | ✓ Complete | 2026-01-29 |
+| 5. AI Generation | 5/5 | ✓ Complete | 2026-01-29 |
+| 6. Strategy Intake Upgrade | 0/4 | In Progress | — |
 
 ---
 *Roadmap created: 2026-01-21*
-*Last updated: 2026-01-29*
+*Last updated: 2026-02-10*
