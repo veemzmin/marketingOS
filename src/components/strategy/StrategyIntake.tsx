@@ -95,8 +95,79 @@ export function StrategyIntake() {
               <p className="mt-1">{state.summary}</p>
             </div>
             <div>
+              <div className="font-semibold text-gray-900">Signals Detected</div>
+              <div className="mt-1 flex flex-wrap gap-1">
+                {state.detectedSignalKeys.map((key) => (
+                  <span
+                    key={key}
+                    className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 border border-blue-200"
+                  >
+                    {key}
+                  </span>
+                ))}
+                {state.detectedSignalKeys.length === 0 && (
+                  <span className="text-gray-400 text-xs">No specific signals detected</span>
+                )}
+              </div>
+            </div>
+            <div>
+              <div className="font-semibold text-gray-900">Confidence Score</div>
+              <div className="mt-1 flex items-center gap-2">
+                <div className="h-2 w-32 rounded-full bg-gray-200">
+                  <div
+                    className="h-2 rounded-full bg-blue-500"
+                    style={{ width: `${state.confidenceScore}%` }}
+                  />
+                </div>
+                <span className="text-xs text-gray-600">{state.confidenceScore}/100</span>
+              </div>
+            </div>
+            <div>
+              <div className="font-semibold text-gray-900">Audience Clarity</div>
+              <div className="mt-1 flex items-center gap-2">
+                <span
+                  className={
+                    state.stakeholdersClarityLevel === "high"
+                      ? "rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 border border-green-200"
+                      : state.stakeholdersClarityLevel === "medium"
+                        ? "rounded-full bg-yellow-50 px-2 py-0.5 text-xs font-medium text-yellow-700 border border-yellow-200"
+                        : "rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 border border-red-200"
+                  }
+                >
+                  {state.stakeholdersClarityLevel}
+                </span>
+                <span className="text-xs text-gray-500">
+                  {state.stakeholdersClarityLevel === "high"
+                    ? "Audience well-defined"
+                    : state.stakeholdersClarityLevel === "medium"
+                      ? "Audience partially defined"
+                      : "Audience unclear - review MIQ-01"}
+                </span>
+              </div>
+            </div>
+            <div>
               <div className="font-semibold text-gray-900">Cadence</div>
               <p className="mt-1">{state.recommendedCadence}</p>
+            </div>
+            <div>
+              <div className="font-semibold text-gray-900">Why This Cadence</div>
+              <p className="mt-1 text-gray-700">{state.cadenceRationale}</p>
+              {Object.keys(state.evidence).length > 0 && (
+                <div className="mt-2">
+                  <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">Evidence highlights</div>
+                  <ul className="mt-1 space-y-0.5">
+                    {Object.entries(state.evidence)
+                      .filter(([, terms]) => terms && terms.length > 0)
+                      .slice(0, 3)
+                      .map(([key, terms]) => (
+                        <li key={key} className="text-xs text-gray-600">
+                          <span className="font-medium">{key}:</span>{" "}
+                          {(terms as string[]).slice(0, 3).join(", ")}
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+              )}
             </div>
             <div>
               <div className="font-semibold text-gray-900">Channels</div>
@@ -105,6 +176,14 @@ export function StrategyIntake() {
                   <li key={channel}>{channel}</li>
                 ))}
               </ul>
+            </div>
+            <div>
+              <div className="font-semibold text-gray-900">Campaign Stack</div>
+              <ol className="mt-1 list-decimal pl-4 space-y-0.5">
+                {state.stack.map((item, i) => (
+                  <li key={i}>{item}</li>
+                ))}
+              </ol>
             </div>
             <div>
               <div className="font-semibold text-gray-900">Assets</div>
@@ -118,18 +197,34 @@ export function StrategyIntake() {
               <div className="font-semibold text-gray-900">Experiments</div>
               <ul className="mt-1 list-disc pl-4">
                 {state.experiments.map((experiment) => (
-                  <li key={experiment}>{experiment}</li>
+                  <li key={experiment.id}>
+                    <span className="font-mono text-xs text-gray-500">{experiment.id}</span>{" "}
+                    {experiment.name}{" "}
+                    <span className="text-gray-400">[{experiment.safetyClass}]</span>
+                  </li>
                 ))}
               </ul>
             </div>
-            {state.risks.length > 0 && (
+            {(state.risks.length > 0 || state.requiresVisibilityArchive || state.requiresApprovalWorkflow) && (
               <div>
                 <div className="font-semibold text-gray-900">Risks & Notes</div>
-                <ul className="mt-1 list-disc pl-4">
-                  {state.risks.map((risk) => (
-                    <li key={risk}>{risk}</li>
-                  ))}
-                </ul>
+                {state.risks.length > 0 && (
+                  <ul className="mt-1 list-disc pl-4">
+                    {state.risks.map((risk) => (
+                      <li key={risk}>{risk}</li>
+                    ))}
+                  </ul>
+                )}
+                {state.requiresVisibilityArchive && (
+                  <div className="mt-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">
+                    <span className="font-semibold">Archive / Visibility required:</span> Compliance or reporting signals detected. Content related to compliance, annual reports, or stakeholder visibility should be archived and documented.
+                  </div>
+                )}
+                {state.requiresApprovalWorkflow && (
+                  <div className="mt-2 rounded-md bg-orange-50 border border-orange-200 px-3 py-2 text-xs text-orange-800">
+                    <span className="font-semibold">Approval gates required:</span> Explicit approval or sign-off language detected. All deliverables must pass a documented approval checkpoint before publish.
+                  </div>
+                )}
               </div>
             )}
             <div>
@@ -139,7 +234,7 @@ export function StrategyIntake() {
                   <li key={step}>{step}</li>
                 ))}
               </ul>
-          </div>
+            </div>
             <div>
               <div className="font-semibold text-gray-900">Planner Prompt</div>
               <pre className="mt-2 whitespace-pre-wrap rounded-md bg-gray-50 p-3 text-xs text-gray-700">
