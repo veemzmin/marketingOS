@@ -47,6 +47,15 @@ const navItems: NavItem[] = [
     ),
   },
   {
+    label: 'Strategy',
+    href: '/dashboard/strategy',
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A2 2 0 013 15.382V5.618A2 2 0 014.106 3.79L9 2m0 18l6-3m-6 3V2m6 18l5.447-2.724A2 2 0 0021 15.382V5.618a2 2 0 00-1.106-1.828L15 2m0 18V2" />
+      </svg>
+    ),
+  },
+  {
     label: 'Reviews',
     href: '/dashboard/reviews',
     icon: (
