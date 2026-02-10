@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useFormState } from "react-dom"
 import { analyzeStrategyAction } from "@/app/actions/strategy"
@@ -10,6 +10,9 @@ const initialState = null
 export function StrategyIntake() {
   const [state, formAction] = useFormState(analyzeStrategyAction, initialState)
   const router = useRouter()
+  const [audienceValue, setAudienceValue] = useState("")
+  const [goalsValue, setGoalsValue] = useState("")
+  const [cadenceValue, setCadenceValue] = useState("")
 
   useEffect(() => {
     if (!state) return
@@ -34,11 +37,76 @@ export function StrategyIntake() {
     <div className="grid gap-8 lg:grid-cols-[1.2fr_1fr]">
       <form action={formAction} className="space-y-6 rounded-lg bg-white p-6 shadow-sm">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">Campaign Intake</h2>
+          <h2 className="text-xl font-semibold text-gray-900">Let&apos;s shape your campaign</h2>
           <p className="text-sm text-gray-600">
-            Paste a message, email, or chat. We&apos;ll recommend cadence, channels, and tests.
+            Paste what you have &mdash; we&apos;ll help organize the rest.
           </p>
         </div>
+
+        {state && (
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <div className="text-sm font-semibold text-gray-900">
+              🧭 We pulled a few starting points
+            </div>
+            <p className="mt-1 text-xs text-gray-600">
+              You can change any of these — they&apos;re just starting points.
+            </p>
+
+            <div className="mt-3 space-y-3 text-xs text-gray-700">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  Audience
+                </div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {state.suggestedAudience.map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => setAudienceValue(item)}
+                      className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-100"
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  Goals
+                </div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {state.suggestedGoals.map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => setGoalsValue(item)}
+                      className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-100"
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  Cadence
+                </div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {state.suggestedCadence.map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => setCadenceValue(item)}
+                      className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-100"
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <label className="grid gap-2 text-sm">
           <span className="font-medium text-gray-700">Intake Text</span>
@@ -76,6 +144,8 @@ export function StrategyIntake() {
               name="audience"
               className="rounded-md border border-gray-300 px-3 py-2"
               placeholder="Patients, families, clinicians"
+              value={audienceValue}
+              onChange={(event) => setAudienceValue(event.target.value)}
             />
           </label>
         </div>
@@ -86,6 +156,8 @@ export function StrategyIntake() {
             name="goals"
             className="rounded-md border border-gray-300 px-3 py-2"
             placeholder="Increase program awareness and enrollments"
+            value={goalsValue}
+            onChange={(event) => setGoalsValue(event.target.value)}
           />
         </label>
 
@@ -95,6 +167,8 @@ export function StrategyIntake() {
             name="cadence"
             className="rounded-md border border-gray-300 px-3 py-2"
             placeholder="e.g., 3x/week social + 1 email/week"
+            value={cadenceValue}
+            onChange={(event) => setCadenceValue(event.target.value)}
           />
         </label>
 

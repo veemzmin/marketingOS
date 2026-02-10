@@ -92,6 +92,9 @@ export interface IntakeAnalysis {
   stakeholdersClarityLevel: StakeholdersClarityLevel
   stack: string[]
   plannerPrompt: string
+  suggestedAudience: string[]
+  suggestedGoals: string[]
+  suggestedCadence: string[]
 }
 
 // ─── 1. Signal Detection Patterns ────────────────────────────────────────────
@@ -250,6 +253,69 @@ function buildStack(
   }
 
   return base
+}
+
+function buildSuggestions(primary: CampaignArchetype): {
+  suggestedAudience: string[]
+  suggestedGoals: string[]
+  suggestedCadence: string[]
+} {
+  const suggestions: Record<CampaignArchetype, {
+    suggestedAudience: string[]
+    suggestedGoals: string[]
+    suggestedCadence: string[]
+  }> = {
+    "trust-building": {
+      suggestedAudience: ["Patients", "Families", "Community members"],
+      suggestedGoals: [
+        "Build awareness of services",
+        "Reduce stigma",
+        "Explain whole-person care",
+      ],
+      suggestedCadence: [
+        "3x/week social + monthly email",
+        "2x/week social + biweekly email",
+      ],
+    },
+    "program-launch": {
+      suggestedAudience: ["Patients", "Families", "Community partners"],
+      suggestedGoals: [
+        "Announce the program launch",
+        "Explain how to get started",
+        "Drive early inquiries",
+      ],
+      suggestedCadence: [
+        "Daily social during launch week + weekly email",
+        "3x/week social + 1 email/week",
+      ],
+    },
+    "referral-enablement": {
+      suggestedAudience: ["Clinicians", "Care coordinators", "Referral partners"],
+      suggestedGoals: [
+        "Educate providers on referral process",
+        "Increase qualified referrals",
+        "Build clinical trust",
+      ],
+      suggestedCadence: [
+        "Biweekly email drip + 2x/week LinkedIn",
+        "Monthly provider update + 2x/week LinkedIn",
+      ],
+    },
+    "compliance-visibility": {
+      suggestedAudience: ["Board members", "Compliance stakeholders", "Funder partners"],
+      suggestedGoals: [
+        "Document compliance milestones",
+        "Provide visibility into approvals",
+        "Share audit-ready updates",
+      ],
+      suggestedCadence: [
+        "Milestone-triggered updates only",
+        "Quarterly summary + milestone posts",
+      ],
+    },
+  }
+
+  return suggestions[primary]
 }
 
 // ─── 2. Archetype Decision Tree ───────────────────────────────────────────────
@@ -721,6 +787,7 @@ ${goals}`
     stakeholdersClarityLevel
   )
   const stack = buildStack(primary, secondary)
+  const suggestions = buildSuggestions(primary)
 
   // 3. Cadence rule
   const cadenceRule = CADENCE_RULES[primary]
@@ -781,6 +848,9 @@ ${goals}`
     requiresApprovalWorkflow,
     requiresVisibilityArchive,
     evidence,
+    suggestedAudience: suggestions.suggestedAudience,
+    suggestedGoals: suggestions.suggestedGoals,
+    suggestedCadence: suggestions.suggestedCadence,
   }
 
   // 7. Build governed planner prompt

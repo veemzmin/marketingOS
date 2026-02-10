@@ -26,6 +26,9 @@ export type StrategyRecommendation = {
   stack: string[]
   detectedSignalKeys: string[]
   plannerPrompt: string
+  suggestedAudience: string[]
+  suggestedGoals: string[]
+  suggestedCadence: string[]
 }
 
 // Map engine analysis to the shape the UI consumes.
@@ -186,6 +189,9 @@ function toRecommendation(
     stack: analysis.stack,
     detectedSignalKeys: analysis.detectedSignalKeys,
     plannerPrompt: analysis.plannerPrompt,
+    suggestedAudience: analysis.suggestedAudience,
+    suggestedGoals: analysis.suggestedGoals,
+    suggestedCadence: analysis.suggestedCadence,
   }
 }
 
