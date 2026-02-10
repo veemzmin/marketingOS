@@ -44,7 +44,7 @@ export async function inviteUserAction(email: string, role: Role) {
 
   const session = await auth()
   if (!session?.user?.id) {
-    return { error: "Not authenticated" }
+    throw new Error("Not authenticated")
   }
 
   const tenantId = await resolveTenantId(session.user.id)
