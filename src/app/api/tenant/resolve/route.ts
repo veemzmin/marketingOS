@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/auth"
-import { prisma } from "@/lib/db/client"
+import { basePrisma } from "@/lib/db/client"
 
 export const dynamic = "force-dynamic"
 
@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   const slug = request.nextUrl.searchParams.get("slug")
 
   if (slug) {
-    const organization = await prisma.organization.findUnique({
+    const organization = await basePrisma.organization.findUnique({
       where: { slug },
     })
 
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Organization not found" }, { status: 404 })
     }
 
-    const membership = await prisma.userOrganization.findFirst({
+    const membership = await basePrisma.userOrganization.findFirst({
       where: {
         userId: session.user.id,
         organizationId: organization.id,
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     })
   }
 
-  const membership = await prisma.userOrganization.findFirst({
+  const membership = await basePrisma.userOrganization.findFirst({
     where: { userId: session.user.id },
     orderBy: { createdAt: "asc" },
     include: { organization: true },

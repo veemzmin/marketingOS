@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db/client"
+import { basePrisma } from "@/lib/db/client"
 import { NextRequest } from "next/server"
 
 /**
@@ -51,7 +51,7 @@ export async function extractTenantContext(
   }
 
   // Lookup organization by slug
-  const organization = await prisma.organization.findUnique({
+  const organization = await basePrisma.organization.findUnique({
     where: { slug },
   })
 
@@ -60,7 +60,7 @@ export async function extractTenantContext(
   }
 
   // Verify user has membership in this organization
-  const membership = await prisma.userOrganization.findFirst({
+  const membership = await basePrisma.userOrganization.findFirst({
     where: {
       userId,
       organizationId: organization.id,
