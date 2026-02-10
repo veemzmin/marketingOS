@@ -56,6 +56,15 @@ const navItems: NavItem[] = [
     ),
   },
   {
+    label: 'Brief Builder',
+    href: '/brief-builder',
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5h6m2 4H7m10 4H7m10 4H7M5 5h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z" />
+      </svg>
+    ),
+  },
+  {
     label: 'Reviews',
     href: '/dashboard/reviews',
     icon: (
