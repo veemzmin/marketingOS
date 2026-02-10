@@ -1,5 +1,7 @@
 "use client"
 
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { useFormState } from "react-dom"
 import { analyzeStrategyAction } from "@/app/actions/strategy"
 
@@ -7,6 +9,26 @@ const initialState = null
 
 export function StrategyIntake() {
   const [state, formAction] = useFormState(analyzeStrategyAction, initialState)
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!state) return
+    try {
+      localStorage.setItem("marketingos:strategy-intake", JSON.stringify(state))
+    } catch (error) {
+      console.error("Failed to store strategy intake", error)
+    }
+  }, [state])
+
+  const handleContinue = () => {
+    if (!state) return
+    try {
+      localStorage.setItem("lastStrategyRecommendation", JSON.stringify(state))
+    } catch (error) {
+      console.error("Failed to store strategy recommendation", error)
+    }
+    router.push("/brief-builder")
+  }
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1.2fr_1fr]">
@@ -90,6 +112,21 @@ export function StrategyIntake() {
         )}
         {state && (
           <div className="mt-4 space-y-4 text-sm text-gray-700">
+            <div className="rounded-md border border-blue-200 bg-blue-50 px-4 py-3">
+              <div className="text-xs font-semibold text-blue-700">
+                Next step: Build the campaign brief
+              </div>
+              <div className="mt-1 text-xs text-blue-600">
+                Lock key fields, review compliance notes, and export a draft-ready brief.
+              </div>
+              <button
+                type="button"
+                onClick={handleContinue}
+                className="mt-3 inline-flex items-center rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
+              >
+                Continue to Brief Builder
+              </button>
+            </div>
             <div>
               <div className="font-semibold text-gray-900">Summary</div>
               <p className="mt-1">{state.summary}</p>
