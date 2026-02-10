@@ -1,6 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  experimental: {
+    serverComponentsExternalPackages: ["@prisma/client", "prisma"],
+  },
+  outputFileTracingIncludes: {
+    "/**/*": ["./generated/prisma/**"],
+  },
   webpack: (config, { isServer }) => {
     // Fix for Prisma node:crypto imports
     if (!isServer) {
