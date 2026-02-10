@@ -29,6 +29,16 @@ export function StrategyIntake() {
           />
         </label>
 
+        <label className="grid gap-2 text-sm">
+          <span className="font-medium text-gray-700">Additional Ideas (optional)</span>
+          <textarea
+            name="ideasText"
+            rows={5}
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+            placeholder="Drop rough ideas, fragments, or thoughts here..."
+          />
+        </label>
+
         <div className="grid gap-4 md:grid-cols-2">
           <label className="grid gap-2 text-sm">
             <span className="font-medium text-gray-700">Industry</span>
@@ -129,6 +139,12 @@ export function StrategyIntake() {
                   <li key={step}>{step}</li>
                 ))}
               </ul>
+          </div>
+            <div>
+              <div className="font-semibold text-gray-900">Planner Prompt</div>
+              <pre className="mt-2 whitespace-pre-wrap rounded-md bg-gray-50 p-3 text-xs text-gray-700">
+                {state.plannerPrompt}
+              </pre>
             </div>
           </div>
         )}

@@ -8,6 +8,7 @@ type StrategyRecommendation = {
   assets: string[]
   nextSteps: string[]
   risks: string[]
+  plannerPrompt: string
 }
 
 function includesAny(text: string, terms: string[]) {
@@ -26,12 +27,14 @@ export async function analyzeStrategyAction(
   formData: FormData
 ): Promise<StrategyRecommendation> {
   const rawText = String(formData.get("intakeText") || "")
+  const rawIdeas = String(formData.get("ideasText") || "")
   const industry = String(formData.get("industry") || "").trim()
   const goals = String(formData.get("goals") || "").trim()
   const preferredCadence = String(formData.get("cadence") || "").trim()
   const audience = String(formData.get("audience") || "").trim()
 
-  const text = rawText.toLowerCase()
+  const combinedText = `${rawText}\n${rawIdeas}`.trim()
+  const text = combinedText.toLowerCase()
   const mentionsSocial = includesAny(text, ["social", "post", "posts", "instagram", "facebook", "linkedin"])
   const mentionsFlyer = includesAny(text, ["flyer", "print", "one-pager"])
   const mentionsEmail = includesAny(text, ["email", "newsletter", "drip", "nurture"])
@@ -104,6 +107,26 @@ export async function analyzeStrategyAction(
     "Run 2-week pilot and review performance",
   ]
 
+  const plannerPrompt = [
+    "You are a marketing strategy lead. Build a campaign plan from the notes below.",
+    "",
+    `Industry: ${industry || "Unknown"}`,
+    `Audience: ${audience || "Unknown"}`,
+    `Goals: ${goals || "Unknown"}`,
+    `Cadence preference: ${preferredCadence || "None"}`,
+    "",
+    "Notes / intake:",
+    combinedText || "No intake text provided.",
+    "",
+    "Deliver:",
+    "- Recommended campaign type(s)",
+    "- Cadence and channel mix",
+    "- Content themes and hooks",
+    "- 2–3 A/B tests",
+    "- Required assets and owners",
+    "- 2-week launch plan",
+  ].join("\n")
+
   return {
     summary,
     recommendedCadence: cadence,
@@ -112,5 +135,6 @@ export async function analyzeStrategyAction(
     assets: Array.from(assets),
     nextSteps,
     risks,
+    plannerPrompt,
   }
 }
