@@ -11,10 +11,78 @@ import { randomUUID } from "crypto"
 import speakeasy from "speakeasy"
 import { logger } from "@/lib/logger"
 
+async function ensureDevBootstrap(email: string, password: string) {
+  if (process.env.DEV_LOGIN_ENABLED !== "true") {
+    return
+  }
+
+  if (email !== "admin@example.com" || password !== "password123") {
+    return
+  }
+
+  const organizationSlug = "default-organization"
+  const organizationName = "Default Organization"
+
+  let organization = await basePrisma.organization.findUnique({
+    where: { slug: organizationSlug },
+  })
+
+  if (!organization) {
+    const orgId = `org_${randomUUID().replace(/-/g, "")}`
+    await basePrisma.$executeRaw`SELECT set_config('app.current_tenant_id', ${orgId}, false)`
+    organization = await basePrisma.organization.create({
+      data: {
+        id: orgId,
+        slug: organizationSlug,
+        name: organizationName,
+      },
+    })
+  }
+
+  await basePrisma.$executeRaw`SELECT set_config('app.current_tenant_id', ${organization.id}, false)`
+
+  let user = await basePrisma.user.findUnique({ where: { email } })
+  if (!user) {
+    const passwordHash = await hashPassword(password)
+    user = await basePrisma.user.create({
+      data: {
+        email,
+        name: "Admin",
+        passwordHash,
+        emailVerified: new Date(),
+      },
+    })
+  } else if (!user.emailVerified) {
+    user = await basePrisma.user.update({
+      where: { id: user.id },
+      data: { emailVerified: new Date() },
+    })
+  }
+
+  const membership = await basePrisma.userOrganization.findFirst({
+    where: {
+      userId: user.id,
+      organizationId: organization.id,
+    },
+  })
+
+  if (!membership) {
+    await basePrisma.userOrganization.create({
+      data: {
+        userId: user.id,
+        organizationId: organization.id,
+        role: "ADMIN",
+      },
+    })
+  }
+}
+
 export async function loginAction(_prevState: unknown, formData: FormData) {
   try {
     const email = formData.get("email") as string
     const password = formData.get("password") as string
+
+    await ensureDevBootstrap(email, password)
 
     // Check if user exists and get their info
     const user = await basePrisma.user.findUnique({
