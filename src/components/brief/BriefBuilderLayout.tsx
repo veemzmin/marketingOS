@@ -11,7 +11,8 @@ import { BriefPreviewPanel } from "@/components/brief/BriefPreviewPanel"
 import { DraftingPromptsPanel } from "@/components/brief/DraftingPromptsPanel"
 import { ExportControls } from "@/components/brief/ExportControls"
 
-const STORAGE_KEY = "lastStrategyRecommendation"
+const PRIMARY_STORAGE_KEY = "lastStrategyRecommendation"
+const FALLBACK_STORAGE_KEY = "marketingos:strategy-intake"
 const BRIEF_ENGINE_VERSION = "1.0.0"
 
 type LockedFieldKey = keyof CampaignBrief
@@ -64,7 +65,14 @@ export function BriefBuilderLayout() {
   useEffect(() => {
     const loadStrategy = () => {
       try {
-        const raw = window.localStorage.getItem(STORAGE_KEY)
+        let raw = window.localStorage.getItem(PRIMARY_STORAGE_KEY)
+        if (!raw) {
+          const fallback = window.localStorage.getItem(FALLBACK_STORAGE_KEY)
+          if (fallback) {
+            raw = fallback
+            window.localStorage.setItem(PRIMARY_STORAGE_KEY, fallback)
+          }
+        }
         if (!raw) {
           setStrategy(null)
           return
@@ -81,7 +89,7 @@ export function BriefBuilderLayout() {
     loadStrategy()
 
     const handleStorage = (event: StorageEvent) => {
-      if (event.key === STORAGE_KEY) {
+      if (event.key === PRIMARY_STORAGE_KEY || event.key === FALLBACK_STORAGE_KEY) {
         loadStrategy()
       }
     }
