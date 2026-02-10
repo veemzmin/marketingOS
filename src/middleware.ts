@@ -75,6 +75,24 @@ export async function middleware(request: NextRequest) {
       }
     }
 
+    if (!resolved && token?.id && process.env.INTERNAL_RESOLVE_SECRET) {
+      const internalUrl = new URL("/api/tenant/resolve", request.url)
+      internalUrl.searchParams.set("userId", String(token.id))
+      const internalResponse = await fetch(internalUrl, {
+        headers: {
+          "x-internal-resolve": process.env.INTERNAL_RESOLVE_SECRET,
+        },
+        cache: "no-store",
+      })
+
+      if (internalResponse.ok) {
+        resolved = (await internalResponse.json()) as {
+          tenantId: string
+          organizationSlug: string
+        }
+      }
+    }
+
     if (!resolved) {
       if (pathname.startsWith("/api/")) {
         return NextResponse.json(
