@@ -6,6 +6,7 @@ import {
 } from "@/lib/strategy/intake-engine"
 
 export type StrategyRecommendation = {
+  analysis: IntakeAnalysis
   summary: string
   primaryArchetype: string
   secondaryArchetype?: string
@@ -161,6 +162,7 @@ function toRecommendation(
 
 
   return {
+    analysis,
     summary,
     primaryArchetype: analysis.primaryArchetype,
     secondaryArchetype: analysis.secondaryArchetype,
