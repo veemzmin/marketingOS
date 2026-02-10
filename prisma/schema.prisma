@@ -46,6 +46,8 @@ model User {
   name          String?
   emailVerified DateTime?
   passwordHash  String
+  isActive      Boolean   @default(true)
+  disabledAt    DateTime?
   totpEnabled   Boolean   @default(false)
   totpSecret    String?
   createdAt     DateTime  @default(now())

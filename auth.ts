@@ -26,7 +26,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             where: { id: userId },
           })
 
-          if (!user || !user.totpEnabled) {
+          if (!user || !user.totpEnabled || user.isActive === false) {
             return null
           }
 
@@ -45,6 +45,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         if (!user) {
           return null
+        }
+
+        if (user.isActive === false) {
+          throw new Error("Account disabled")
         }
 
         // Check if email is verified
