@@ -39,7 +39,7 @@ function LoginForm() {
 
   const DEV_CREDENTIALS = {
     email: "admin@example.com",
-    password: "password123",
+    password: "JpY-Ysh0b-eF+eHJ_Rz-",
   }
 
   return (
