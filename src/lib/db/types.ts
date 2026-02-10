@@ -3,4 +3,5 @@ export {
   GenerationJobType,
   ReviewerType,
   ContentStatus,
-} from "../../../generated/prisma/client"
+} from "@prisma/client"
+} from "@prisma/client"

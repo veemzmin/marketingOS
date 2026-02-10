@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { changeUserRoleAction } from "@/app/actions/admin"
-import { Role } from "../../../../generated/prisma/client"
+import { Role } from "@prisma/client"
 
 interface RoleChangeDropdownProps {
   userId: string

@@ -6,7 +6,7 @@ import { headers } from "next/headers"
 import { requireAdmin } from "@/lib/auth/permissions"
 import { logRoleChange, logUserInvitation } from "@/lib/audit/logger"
 import { sendInvitationEmail } from "@/lib/email/client"
-import { Role } from "../../../generated/prisma/client"
+import { Role } from "@prisma/client"
 import { randomUUID } from "crypto"
 import { revalidatePath } from "next/cache"
 

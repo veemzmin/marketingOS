@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { inviteUserAction } from "@/app/actions/admin"
-import { Role } from "../../../../../generated/prisma/client"
+import { Role } from "@prisma/client"
 import { useRouter } from "next/navigation"
 
 export function InviteForm() {
