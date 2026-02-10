@@ -1,5 +1,5 @@
 import { auth } from "@/auth"
-import { prisma } from "@/lib/db/client"
+import { prisma, basePrisma } from "@/lib/db/client"
 import { Role } from "@prisma/client"
 import { redirect } from "next/navigation"
 import { headers } from "next/headers"
@@ -24,10 +24,24 @@ export async function getCurrentUserRole(): Promise<Role | null> {
   }
 
   const headersList = await headers()
-  const tenantId = headersList.get("x-tenant-id")
+  let tenantId = headersList.get("x-tenant-id")
 
   if (!tenantId) {
-    return null
+    const fallbackMembership = await basePrisma.userOrganization.findFirst({
+      where: { userId: session.user.id },
+      orderBy: { createdAt: "asc" },
+      select: {
+        role: true,
+        organizationId: true,
+      },
+    })
+
+    if (!fallbackMembership) {
+      return null
+    }
+
+    tenantId = fallbackMembership.organizationId
+    return fallbackMembership.role
   }
 
   const membership = await prisma.userOrganization.findFirst({
