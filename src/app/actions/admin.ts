@@ -227,7 +227,7 @@ export async function changeUserRoleAction(userId: string, newRole: Role) {
  * @param userId - User ID to remove
  * @returns Success or error message
  */
-export async function removeUserFromOrganizationAction(userId: string) {
+export async function removeUserFromOrganizationAction(formData: FormData): Promise<void> {
   // Verify admin permission
   await requireAdmin()
 
@@ -236,15 +236,20 @@ export async function removeUserFromOrganizationAction(userId: string) {
     return { error: "Not authenticated" }
   }
 
+  const userId = String(formData.get("userId") || "")
+  if (!userId) {
+    throw new Error("User is required")
+  }
+
   // Prevent self-removal
   if (session.user.id === userId) {
-    return { error: "Cannot remove yourself from the organization" }
+    throw new Error("Cannot remove yourself from the organization")
   }
 
   const tenantId = await resolveTenantId(session.user.id)
 
   if (!tenantId) {
-    return { error: "No organization context" }
+    throw new Error("No organization context")
   }
 
   // Delete membership
@@ -275,7 +280,7 @@ export async function removeUserFromOrganizationAction(userId: string) {
   }
 
   revalidatePath("/admin/users")
-  return { success: true, message: "User removed from organization" }
+  return
 }
 
 export async function createUserAction(formData: FormData): Promise<void> {
