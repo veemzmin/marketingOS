@@ -179,7 +179,7 @@ export async function changeUserRoleAction(userId: string, newRole: Role) {
 
   const session = await auth()
   if (!session?.user?.id) {
-    return { error: "Not authenticated" }
+    throw new Error("Not authenticated")
   }
 
   // Prevent self-demotion from admin
