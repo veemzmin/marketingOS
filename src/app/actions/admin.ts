@@ -278,17 +278,17 @@ export async function removeUserFromOrganizationAction(userId: string) {
   return { success: true, message: "User removed from organization" }
 }
 
-export async function createUserAction(formData: FormData) {
+export async function createUserAction(formData: FormData): Promise<void> {
   await requireAdmin()
 
   const session = await auth()
   if (!session?.user?.id) {
-    return { error: "Not authenticated" }
+    throw new Error("Not authenticated")
   }
 
   const tenantId = await resolveTenantId(session.user.id)
   if (!tenantId) {
-    return { error: "No organization context" }
+    throw new Error("No organization context")
   }
 
   const email = String(formData.get("email") || "").trim().toLowerCase()
@@ -297,12 +297,12 @@ export async function createUserAction(formData: FormData) {
   const password = String(formData.get("password") || "")
 
   if (!email || !password) {
-    return { error: "Email and password are required" }
+    throw new Error("Email and password are required")
   }
 
   const validation = validatePasswordStrength(password)
   if (!validation.valid) {
-    return { error: validation.errors.join(", ") }
+    throw new Error(validation.errors.join(", "))
   }
 
   const existingUser = await basePrisma.user.findUnique({ where: { email } })
@@ -323,7 +323,7 @@ export async function createUserAction(formData: FormData) {
   }
 
   if (!userId) {
-    return { error: "Unable to create user" }
+    throw new Error("Unable to create user")
   }
 
   const existingMembership = await basePrisma.userOrganization.findFirst({
@@ -345,15 +345,15 @@ export async function createUserAction(formData: FormData) {
   }
 
   revalidatePath("/admin/users")
-  return { success: true, message: "User created" }
+  return
 }
 
-export async function updateUserAction(formData: FormData) {
+export async function updateUserAction(formData: FormData): Promise<void> {
   await requireAdmin()
 
   const session = await auth()
   if (!session?.user?.id) {
-    return { error: "Not authenticated" }
+    throw new Error("Not authenticated")
   }
 
   const userId = String(formData.get("userId") || "")
@@ -361,7 +361,7 @@ export async function updateUserAction(formData: FormData) {
   const email = String(formData.get("email") || "").trim().toLowerCase()
 
   if (!userId || !email) {
-    return { error: "User and email are required" }
+    throw new Error("User and email are required")
   }
 
   await basePrisma.user.update({
@@ -373,27 +373,27 @@ export async function updateUserAction(formData: FormData) {
   })
 
   revalidatePath("/admin/users")
-  return { success: true, message: "User updated" }
+  return
 }
 
-export async function resetPasswordAction(formData: FormData) {
+export async function resetPasswordAction(formData: FormData): Promise<void> {
   await requireAdmin()
 
   const session = await auth()
   if (!session?.user?.id) {
-    return { error: "Not authenticated" }
+    throw new Error("Not authenticated")
   }
 
   const userId = String(formData.get("userId") || "")
   const password = String(formData.get("password") || "")
 
   if (!userId || !password) {
-    return { error: "User and password are required" }
+    throw new Error("User and password are required")
   }
 
   const validation = validatePasswordStrength(password)
   if (!validation.valid) {
-    return { error: validation.errors.join(", ") }
+    throw new Error(validation.errors.join(", "))
   }
 
   const passwordHash = await hashPassword(password)
@@ -406,22 +406,22 @@ export async function resetPasswordAction(formData: FormData) {
   })
 
   revalidatePath("/admin/users")
-  return { success: true, message: "Password reset" }
+  return
 }
 
-export async function setUserActiveAction(formData: FormData) {
+export async function setUserActiveAction(formData: FormData): Promise<void> {
   await requireAdmin()
 
   const session = await auth()
   if (!session?.user?.id) {
-    return { error: "Not authenticated" }
+    throw new Error("Not authenticated")
   }
 
   const userId = String(formData.get("userId") || "")
   const active = String(formData.get("active") || "true") === "true"
 
   if (!userId) {
-    return { error: "User is required" }
+    throw new Error("User is required")
   }
 
   await basePrisma.user.update({
@@ -433,5 +433,5 @@ export async function setUserActiveAction(formData: FormData) {
   })
 
   revalidatePath("/admin/users")
-  return { success: true, message: active ? "User reactivated" : "User deactivated" }
+  return
 }
